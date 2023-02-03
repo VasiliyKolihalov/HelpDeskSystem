@@ -1,6 +1,6 @@
-﻿using System.Net;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
 using HelpDeskSystem.Exceptions;
-using Newtonsoft.Json;
 
 namespace HelpDeskSystem.Middlewares;
 
@@ -27,12 +27,14 @@ public class ErrorHandlerMiddleware
             response.StatusCode = error switch
             {
                 NotFoundException => (int)HttpStatusCode.NotFound,
-                
+                BadRequestException => (int)HttpStatusCode.BadRequest,
+                ValidationException => (int)HttpStatusCode.BadRequest,
+                ForbiddenException => (int)HttpStatusCode.Forbidden,
+
                 _ => (int)HttpStatusCode.InternalServerError
             };
 
-            string result = JsonConvert.SerializeObject(new { message = error.Message });
-            await response.WriteAsync(result);
+            await response.WriteAsJsonAsync(new { message = error.Message });
         }
     }
 }

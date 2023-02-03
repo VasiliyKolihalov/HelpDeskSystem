@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using HelpDeskSystem.Models;
+using HelpDeskSystem.Models.SupportTicket;
 
 namespace HelpDeskSystem.Profiles;
 

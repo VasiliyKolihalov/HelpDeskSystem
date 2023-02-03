@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using HelpDeskSystem.Models;
+using HelpDeskSystem.Models.SupportTicket;
 using HelpDeskSystem.Repositories;
 
 namespace HelpDeskSystem.Services;
@@ -18,6 +18,7 @@ public class SupportTicketsService
     public async Task<IEnumerable<SupportTicketView>> GetAllAsync()
     {
         IEnumerable<SupportTicket> supportTickets = await _applicationContext.SupportTickets.GetAllAsync();
+        
         return _mapper.Map<IEnumerable<SupportTicketView>>(supportTickets);
     }
 

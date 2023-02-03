@@ -1,6 +1,10 @@
-﻿namespace HelpDeskSystem.Repositories;
+﻿using HelpDeskSystem.Models.SupportTicket;
+
+namespace HelpDeskSystem.Repositories;
 
 public interface IApplicationContext
 {
-    public SupportTicketsRepository SupportTickets { get; }
+    public IRepository<SupportTicket, Guid> SupportTickets { get; }
+    public IUsersRepository Users { get; }
+    public IRolesRepository Roles { get; }
 }
