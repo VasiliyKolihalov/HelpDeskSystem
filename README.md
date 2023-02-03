@@ -21,6 +21,7 @@
 - Dapper
 - Newtonsoft.json
 - AutoMapper
+- BCrypt
 
 ## Planned/Completed features:
 

@@ -1,9 +1,11 @@
-﻿using HelpDeskSystem.Models;
+﻿using HelpDeskSystem.Models.SupportTicket;
 using HelpDeskSystem.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HelpDeskSystem.Controllers;
 
+[Authorize]
 [Route("[controller]")]
 [ApiController]
 public class SupportTicketsController : ControllerBase
@@ -26,7 +28,7 @@ public class SupportTicketsController : ControllerBase
     {
         return await _supportTicketsService.GetByIdAsync(id);
     }
-
+    
     [HttpPost]
     public async Task<SupportTicketView> PostAsync(SupportTicketCreate supportTicketCreate)
     {

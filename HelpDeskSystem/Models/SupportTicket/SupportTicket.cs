@@ -1,4 +1,4 @@
-﻿namespace HelpDeskSystem.Models;
+﻿namespace HelpDeskSystem.Models.SupportTicket;
 
 public class SupportTicket
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HelpDeskSystem.Models;
+namespace HelpDeskSystem.Models.SupportTicket;
 
 public class SupportTicketCreate
 {
