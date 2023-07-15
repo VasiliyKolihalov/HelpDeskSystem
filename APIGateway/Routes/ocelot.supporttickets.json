@@ -1,0 +1,35 @@
+﻿{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/supporttickets",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ]
+    }
+  ]
+}

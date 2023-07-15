@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportTicketWebApi", "SupportTicketWebApi\SupportTicketWebApi.csproj", "{5C43FE86-5D88-4373-88BA-D561FBF69F7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportTickets.WebApi", "SupportTickets.WebApi\SupportTickets.WebApi.csproj", "{5C43FE86-5D88-4373-88BA-D561FBF69F7A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{3D423863-7E49-4193-B7F8-51B9817B312B}"
 EndProject
@@ -9,7 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIGateway", "APIGateway\APIGateway.csproj", "{2FC82823-1A1A-446C-840C-843326D5339B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{2FC82823-1A1A-446C-840C-843326D5339B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.WebApi", "Users.WebApi\Users.WebApi.csproj", "{A0A73246-B25F-44C7-B74E-62B47D3A355C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,5 +31,9 @@ Global
 		{2FC82823-1A1A-446C-840C-843326D5339B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FC82823-1A1A-446C-840C-843326D5339B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FC82823-1A1A-446C-840C-843326D5339B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
