@@ -1,5 +1,7 @@
+using System.Data.Common;
 using Dapper.Transaction;
 using Infrastructure.Extensions;
+using Infrastructure.Services.Persistence;
 using Npgsql;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
@@ -8,18 +10,18 @@ namespace SupportTickets.WebApi.Repositories.SupportTickets;
 
 public class SupportTicketsRepository : ISupportTicketsRepository
 {
-    private readonly string _connectionString;
+    private readonly IDbContext _dbContext;
 
-    public SupportTicketsRepository(string connectionString)
+    public SupportTicketsRepository(IDbContext dbContext)
     {
-        _connectionString = connectionString;
+        _dbContext = dbContext;
     }
 
     public async Task<IEnumerable<SupportTicket>> GetAllAsync()
     {
-        const string query = "select * from SupportTickets";
+        const string query = "select * from supporttickets";
         IEnumerable<SupportTicket> tickets = null!;
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             tickets = await transaction.QueryAsync<SupportTicket>(query);
@@ -29,11 +31,11 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task<SupportTicket?> GetByIdAsync(Guid id)
     {
-        const string query = @"select * from SupportTickets
-                                          inner join Users on SupportTickets.UserId = Users.Id
-                                          where SupportTickets.Id = @id";
+        const string query = @"select * from supporttickets
+                                          inner join users on supporttickets.userid = users.id
+                                          where supporttickets.id = @id";
         SupportTicket? ticket = null;
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             ticket = (await transaction.QueryAsync<SupportTicket, User, SupportTicket>(
@@ -50,8 +52,8 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task InsertAsync(SupportTicket item)
     {
-        const string query = "insert into SupportTickets values (@Id, @Description, @UserId)";
-        await using var connection = new NpgsqlConnection(_connectionString);
+        const string query = "insert into supporttickets values (@Id, @Description, @UserId)";
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             var param = new { item.Id, item.Description, UserId = item.User.Id };
@@ -61,15 +63,15 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task UpdateAsync(SupportTicket item)
     {
-        const string query = "update SupportTickets set Description = @Description where Id = @Id";
-        await using var connection = new NpgsqlConnection(_connectionString);
+        const string query = "update supporttickets set description = @Description where id = @Id";
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(query, item));
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        const string query = "delete from SupportTickets where Id = @id";
-        await using var connection = new NpgsqlConnection(_connectionString);
+        const string query = "delete from supporttickets where id = @id";
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             await transaction.ExecuteAsync(query, param: new { id });

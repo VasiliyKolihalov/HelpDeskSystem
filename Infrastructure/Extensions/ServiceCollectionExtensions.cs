@@ -1,4 +1,6 @@
-﻿using Infrastructure.Models;
+﻿using System.Reflection;
+using FluentMigrator.Runner;
+using Infrastructure.Models;
 using Infrastructure.Services;
 using Infrastructure.Services.Messaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +43,7 @@ public static class ServiceCollectionExtensions
             return publisher;
         });
     }
-    
+
     public static IServiceCollection AddRabbitMqMessageConsumer(
         this IServiceCollection @this,
         string configurationSection)
@@ -68,6 +70,16 @@ public static class ServiceCollectionExtensions
             connectionFactory: _.GetRequiredService<ConnectionFactory>(),
             logger: _.GetRequiredService<ILogger<RabbitMqConsumer>>()));
     }
-    
-    
+
+    public static IServiceCollection AddFluentMigrationForPostgres(
+        this IServiceCollection @this,
+        string connectionString,
+        Assembly executingAssembly)
+    {
+        return @this.AddLogging(_ => _.AddFluentMigratorConsole())
+            .AddFluentMigratorCore()
+            .ConfigureRunner(_ => _.AddPostgres()
+                .WithGlobalConnectionString(connectionString)
+                .ScanIn(executingAssembly).For.Migrations());
+    }
 }

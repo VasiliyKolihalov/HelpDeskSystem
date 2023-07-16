@@ -1,5 +1,8 @@
-﻿using Dapper.Transaction;
+﻿using System.Data;
+using System.Data.Common;
+using Dapper.Transaction;
 using Infrastructure.Extensions;
+using Infrastructure.Services.Persistence;
 using Npgsql;
 using Users.WebApi.Models.Users;
 
@@ -7,18 +10,18 @@ namespace Users.WebApi.Repositories;
 
 public class UsersRepository : IUsersRepository
 {
-    private readonly string _connectionString;
+    private readonly IDbContext _dbContext;
 
-    public UsersRepository(string connectionString)
+    public UsersRepository(IDbContext dbContext)
     {
-        _connectionString = connectionString;
+        _dbContext = dbContext;
     }
 
     public async Task<IEnumerable<User>> GetAllAsync()
     {
-        const string query = "select * from Users";
+        const string query = "select * from users";
         IEnumerable<User> users = null!;
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             users = await transaction.QueryAsync<User>(query);
@@ -28,9 +31,9 @@ public class UsersRepository : IUsersRepository
 
     public async Task<User?> GetByIdAsync(Guid id)
     {
-        const string query = "select * from Users where Id = @id";
+        const string query = "select * from users where id = @id";
         User? user = null;
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             user = await transaction.QueryFirstOrDefaultAsync<User>(query, param: new { id });
@@ -40,26 +43,26 @@ public class UsersRepository : IUsersRepository
 
     public async Task InsertAsync(User item)
     {
-        const string query = "insert into Users values (@Id, @FirstName, @LastName, @Email)";
-        await using var connection = new NpgsqlConnection(_connectionString);
+        const string query = "insert into users values (@Id, @FirstName, @LastName, @Email)";
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(query, item));
     }
 
     public async Task UpdateAsync(User item)
     {
-        const string query = @"update Users set 
-                            FirstName = @FirstName, 
-                            LastName = @LastName, 
-                            Email = @Email 
-                            where Id = @Id";
-        await using var connection = new NpgsqlConnection(_connectionString);
+        const string query = @"update users set 
+                            firstName = @FirstName, 
+                            lastName = @LastName, 
+                            email = @Email 
+                            where id = @Id";
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(query, item));
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        const string query = "delete from Users where Id = @id";
-        await using var connection = new NpgsqlConnection(_connectionString);
+        const string query = "delete from users where id = @id";
+        await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             await transaction.ExecuteAsync(query, param: new { id });
