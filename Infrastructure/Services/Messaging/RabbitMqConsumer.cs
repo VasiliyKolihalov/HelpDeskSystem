@@ -11,7 +11,7 @@ namespace Infrastructure.Services.Messaging;
 public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 {
     private readonly ConnectionFactory _connectionFactory;
-    private readonly RabbitMqConfiguration _rabbitMqConfiguration;
+    private readonly RabbitMqOptions _rabbitMqOptions;
     private readonly ILogger<RabbitMqConsumer> _logger;
     private readonly List<string> _consumerTags = new();
 
@@ -20,11 +20,11 @@ public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     public RabbitMqConsumer(
         ConnectionFactory connectionFactory,
-        IOptions<RabbitMqConfiguration> rabbitMqConfiguration, 
+        IOptions<RabbitMqOptions> rabbitMqOptions, 
         ILogger<RabbitMqConsumer> logger)
     {
         _connectionFactory = connectionFactory;
-        _rabbitMqConfiguration = rabbitMqConfiguration.Value;
+        _rabbitMqOptions = rabbitMqOptions.Value;
         _logger = logger;
     }
 
@@ -33,8 +33,8 @@ public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         Policy
             .Handle<Exception>()
             .WaitAndRetry(
-                retryCount: _rabbitMqConfiguration.ConnectionRetryCount,
-                sleepDurationProvider: _ => _rabbitMqConfiguration.ConnectionRetrySleepDuration,
+                retryCount: _rabbitMqOptions.ConnectionRetryCount,
+                sleepDurationProvider: _ => _rabbitMqOptions.ConnectionRetrySleepDuration,
                 onRetry: (exception, timeSpan) =>
                 {
                     _logger.LogError(

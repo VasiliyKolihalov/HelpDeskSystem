@@ -5,5 +5,4 @@ namespace SupportTickets.WebApi.Models.SupportTickets;
 public class SupportTicketCreate
 {
     [Required] [MaxLength(500)] public string Description { get; set; }
-    [Required] public Guid UserId { get; set; }
 }

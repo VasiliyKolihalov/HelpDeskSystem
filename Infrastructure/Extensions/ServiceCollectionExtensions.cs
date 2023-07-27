@@ -3,6 +3,7 @@ using FluentMigrator.Runner;
 using Infrastructure.Models;
 using Infrastructure.Services;
 using Infrastructure.Services.Messaging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,17 +15,17 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddRabbitMqMessagePublisher(
         this IServiceCollection @this,
-        string configurationSection)
+        IConfigurationSection configurationSection)
     {
         @this
-            .AddOptions<RabbitMqConfiguration>()
-            .BindConfiguration(configurationSection)
+            .AddOptions<RabbitMqOptions>()
+            .Bind(configurationSection)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return @this.AddSingleton<ConnectionFactory>(_ =>
         {
-            var configuration = _.GetRequiredService<IOptions<RabbitMqConfiguration>>().Value;
+            var configuration = _.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
             return new ConnectionFactory
             {
                 HostName = configuration.Host,
@@ -36,7 +37,7 @@ public static class ServiceCollectionExtensions
         }).AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>(_ =>
         {
             var publisher = new RabbitMqPublisher(
-                rabbitMqConfiguration: _.GetRequiredService<IOptions<RabbitMqConfiguration>>(),
+                rabbitMqOptions: _.GetRequiredService<IOptions<RabbitMqOptions>>(),
                 connectionFactory: _.GetRequiredService<ConnectionFactory>(),
                 logger: _.GetRequiredService<ILogger<RabbitMqPublisher>>());
             publisher.Connect();
@@ -46,17 +47,17 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddRabbitMqMessageConsumer(
         this IServiceCollection @this,
-        string configurationSection)
+        IConfigurationSection configurationSection)
     {
         @this
-            .AddOptions<RabbitMqConfiguration>()
-            .BindConfiguration(configurationSection)
+            .AddOptions<RabbitMqOptions>()
+            .Bind(configurationSection)
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return @this.AddSingleton<ConnectionFactory>(_ =>
         {
-            var configuration = _.GetRequiredService<IOptions<RabbitMqConfiguration>>().Value;
+            var configuration = _.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
             return new ConnectionFactory
             {
                 HostName = configuration.Host,
@@ -66,7 +67,7 @@ public static class ServiceCollectionExtensions
                 AutomaticRecoveryEnabled = configuration.AutomaticRecovery
             };
         }).AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>(_ => new RabbitMqConsumer(
-            rabbitMqConfiguration: _.GetRequiredService<IOptions<RabbitMqConfiguration>>(),
+            rabbitMqOptions: _.GetRequiredService<IOptions<RabbitMqOptions>>(),
             connectionFactory: _.GetRequiredService<ConnectionFactory>(),
             logger: _.GetRequiredService<ILogger<RabbitMqConsumer>>()));
     }
@@ -80,6 +81,7 @@ public static class ServiceCollectionExtensions
             .AddFluentMigratorCore()
             .ConfigureRunner(_ => _.AddPostgres()
                 .WithGlobalConnectionString(connectionString)
-                .ScanIn(executingAssembly).For.Migrations());
+                .ScanIn(executingAssembly).For.Migrations()
+                .ConfigureGlobalProcessorOptions(opt => { opt.ProviderSwitches = "Force Quote=false"; }));
     }
 }

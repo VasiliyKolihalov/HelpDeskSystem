@@ -1,11 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Authentication.Infrastructure.Extensions;
+using Authentication.Infrastructure.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Services;
+using static SupportTickets.WebApi.Constants.PermissionsConstants;
 
 namespace SupportTickets.WebApi.Controllers;
 
-[Route("[controller]")]
 [ApiController]
+[Route("[controller]")]
+[Authorize]
 public class SupportTicketsController : ControllerBase
 {
     private readonly SupportTicketsService _supportTicketsService;
@@ -16,6 +21,7 @@ public class SupportTicketsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = SupportTicketsPermissions.GetAll)]
     public async Task<IEnumerable<SupportTicketPreview>> GetAllAsync()
     {
         return await _supportTicketsService.GetAllAsync();
@@ -24,24 +30,24 @@ public class SupportTicketsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<SupportTicketView> GetAsync(Guid id)
     {
-        return await _supportTicketsService.GetByIdAsync(id);
+        return await _supportTicketsService.GetByIdAsync(id, this.GetAccountFromJwt());
     }
 
     [HttpPost]
-    public async Task<SupportTicketPreview> PostAsync(SupportTicketCreate supportTicketCreate)
+    public async Task<Guid> PostAsync(SupportTicketCreate supportTicketCreate)
     {
-        return await _supportTicketsService.CreateAsync(supportTicketCreate);
+        return await _supportTicketsService.CreateAsync(supportTicketCreate, this.GetAccountFromJwt());
     }
 
     [HttpPut]
-    public async Task<SupportTicketPreview> PutAsync(SupportTicketUpdate supportTicketUpdate)
+    public async Task PutAsync(SupportTicketUpdate supportTicketUpdate)
     {
-        return await _supportTicketsService.UpdateAsync(supportTicketUpdate);
+        await _supportTicketsService.UpdateAsync(supportTicketUpdate, this.GetAccountFromJwt());
     }
 
     [HttpDelete]
-    public async Task<SupportTicketPreview> DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id)
     {
-        return await _supportTicketsService.DeleteAsync(id);
+        await _supportTicketsService.DeleteAsync(id, this.GetAccountFromJwt());
     }
 }

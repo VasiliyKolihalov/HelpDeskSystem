@@ -1,9 +1,10 @@
-﻿using AutoMapper;
+﻿using Authentication.Infrastructure.Models;
+using AutoMapper;
 using Infrastructure.Exceptions;
-using Infrastructure.Services;
 using Infrastructure.Services.Messaging;
 using Users.WebApi.Models.Users;
 using Users.WebApi.Repositories;
+using static Users.WebApi.Constants.PermissionsConstants.UsersPermissions;
 
 namespace Users.WebApi.Services;
 
@@ -35,35 +36,40 @@ public class UsersService
         return _mapper.Map<UserView>(user);
     }
 
-    public async Task<UserView> CreateAsync(UserCreate userCreate)
+    public async Task<Guid> CreateAsync(UserCreate userCreate)
     {
         var user = _mapper.Map<User>(userCreate);
         user.Id = Guid.NewGuid();
 
         await _usersRepository.InsertAsync(user);
         _rabbitMqPublisher.PublishMessage(user, "users.created");
-        return _mapper.Map<UserView>(user);
+        return user.Id;
     }
 
-    public async Task<UserView> UpdateAsync(UserUpdate userUpdate)
+    public async Task UpdateAsync(UserUpdate userUpdate, Account<Guid> account)
     {
-        _ = await _usersRepository.GetByIdAsync(userUpdate.Id)
-            ?? throw new NotFoundException($"User with id: {userUpdate.Id} not found");
+        if (!await _usersRepository.IsExistsAsync(userUpdate.Id))
+            throw new NotFoundException($"User with id: {userUpdate.Id} not found");
+
+        if (userUpdate.Id != account.Id || !account.HasPermission(Update))
+            throw new UnauthorizedException();
 
         var user = _mapper.Map<User>(userUpdate);
 
         await _usersRepository.UpdateAsync(user);
         _rabbitMqPublisher.PublishMessage(user, "users.updated");
-        return _mapper.Map<UserView>(user);
     }
 
-    public async Task<UserView> DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid userId, Account<Guid> account)
     {
-        User user = await _usersRepository.GetByIdAsync(id)
-                    ?? throw new NotFoundException($"User with id: {id} not found");
+        User user = await _usersRepository.GetByIdAsync(userId)
+                    ?? throw new NotFoundException($"User with id: {userId} not found");
 
-        await _usersRepository.DeleteAsync(id);
+        if (userId != account.Id || !account.HasPermission(Delete))
+            throw new UnauthorizedException();
+
+
+        await _usersRepository.DeleteAsync(userId);
         _rabbitMqPublisher.PublishMessage(user, "users.deleted");
-        return _mapper.Map<UserView>(user);
     }
 }

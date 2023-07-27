@@ -1,0 +1,92 @@
+{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/gateway/accounts/register",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/accounts/register",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/accounts/login",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/accounts/login",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/accounts/{accountId}/roles/{roleId}",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/accounts/{accountId}/roles/{roleId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/permissions",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/permissions",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/roles",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/roles",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/roles/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/roles/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ]
+    }
+  ]
+}
