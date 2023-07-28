@@ -10,11 +10,11 @@ public static class PermissionsConstants
         public const string Update = SupportTicket + ".update";
         public const string Delete = SupportTicket + ".delete";
 
-        public static readonly IEnumerable<string> AllPermissions = new[]
+        public static readonly IEnumerable<string> PermissionsForPolicy = new[]
         {
             GetAll
         };
     }
 
-    public static readonly IEnumerable<string> AllPermissions = SupportTicketsPermissions.AllPermissions;
+    public static readonly IEnumerable<string> AllPermissionsForPolicy = SupportTicketsPermissions.PermissionsForPolicy;
 }

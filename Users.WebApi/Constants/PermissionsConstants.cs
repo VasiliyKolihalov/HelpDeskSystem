@@ -9,7 +9,7 @@ public static class PermissionsConstants
         public const string Update = Users + ".update";
         public const string Delete = Users + ".delete";
 
-        public static readonly IEnumerable<string> AllPermissions = new[]
+        public static readonly IEnumerable<string> PermissionsForPolicy = new[]
         {
             Create,
             Update,
@@ -17,5 +17,5 @@ public static class PermissionsConstants
         };
     }
 
-    public static readonly IEnumerable<string> AllPermissions = UsersPermissions.AllPermissions;
+    public static readonly IEnumerable<string> AllPermissionsForPolicy = UsersPermissions.PermissionsForPolicy;
 }

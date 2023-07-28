@@ -30,24 +30,24 @@ public class SupportTicketsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<SupportTicketView> GetAsync(Guid id)
     {
-        return await _supportTicketsService.GetByIdAsync(id, this.GetAccountFromJwt());
+        return await _supportTicketsService.GetByIdAsync(id, this.GetAccountFromJwt<Guid>());
     }
 
     [HttpPost]
     public async Task<Guid> PostAsync(SupportTicketCreate supportTicketCreate)
     {
-        return await _supportTicketsService.CreateAsync(supportTicketCreate, this.GetAccountFromJwt());
+        return await _supportTicketsService.CreateAsync(supportTicketCreate, this.GetAccountFromJwt<Guid>());
     }
 
     [HttpPut]
     public async Task PutAsync(SupportTicketUpdate supportTicketUpdate)
     {
-        await _supportTicketsService.UpdateAsync(supportTicketUpdate, this.GetAccountFromJwt());
+        await _supportTicketsService.UpdateAsync(supportTicketUpdate, this.GetAccountFromJwt<Guid>());
     }
 
     [HttpDelete]
     public async Task DeleteAsync(Guid id)
     {
-        await _supportTicketsService.DeleteAsync(id, this.GetAccountFromJwt());
+        await _supportTicketsService.DeleteAsync(id, this.GetAccountFromJwt<Guid>());
     }
 }

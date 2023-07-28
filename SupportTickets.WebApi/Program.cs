@@ -3,10 +3,10 @@ using Authentication.Infrastructure.Extensions;
 using Infrastructure.Extensions;
 using Infrastructure.Middlewares;
 using Infrastructure.Services.Persistence;
+using SupportTickets.WebApi.Constants;
 using SupportTickets.WebApi.Repositories.SupportTickets;
 using SupportTickets.WebApi.Repositories.Users;
 using SupportTickets.WebApi.Services;
-using static SupportTickets.WebApi.Constants.PermissionsConstants;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 ConfigureServices(builder);
@@ -35,7 +35,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
 
     builder.Services
         .AddJwtAuthentication(builder.Configuration.GetRequiredSection("JwtAuthOptions"))
-        .AddAuthorization(options => options.AddPolicyBasedOnJwtPermissions(SupportTicketsPermissions.AllPermissions));
+        .AddAuthorization(options => options
+            .AddPolicyBasedOnJwtPermissions(PermissionsConstants.AllPermissionsForPolicy));
 
     builder.Services
         .AddEndpointsApiExplorer()
@@ -56,7 +57,7 @@ static async Task ConfigureMiddlewaresAsync(WebApplication app)
     }
 
     app.UseMiddleware<ExceptionHandlerMiddleware>();
-    
+
     app.UseAuthentication();
     app.UseAuthorization();
 

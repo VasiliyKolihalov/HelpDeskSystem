@@ -40,13 +40,13 @@ public class UsersController : ControllerBase
     [Authorize]
     public async Task PutAsync(UserUpdate userUpdate)
     {
-        await _usersService.UpdateAsync(userUpdate, this.GetAccountFromJwt());
+        await _usersService.UpdateAsync(userUpdate, this.GetAccountFromJwt<Guid>());
     }
 
     [HttpDelete("{id:guid}")]
     [Authorize]
     public async Task DeleteAsync(Guid id)
     {
-        await _usersService.DeleteAsync(id, this.GetAccountFromJwt());
+        await _usersService.DeleteAsync(id, this.GetAccountFromJwt<Guid>());
     }
 }

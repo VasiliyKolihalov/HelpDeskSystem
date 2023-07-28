@@ -2,7 +2,7 @@
 
 services:
   
-  apigateway:
+  api_gateway:
     image: api_gateway
     container_name: api_gateway
     build:
