@@ -2,7 +2,7 @@
 
 namespace Infrastructure.Models;
 
-public class RabbitMqConfiguration
+public class RabbitMqOptions
 {
     [Required] public string Host { get; set; }
     [Required] public int Port { get; set; }

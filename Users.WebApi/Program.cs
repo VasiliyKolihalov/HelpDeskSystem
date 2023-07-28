@@ -1,48 +1,61 @@
 ﻿using System.Reflection;
-using FluentMigrator.Runner;
+using Authentication.Infrastructure.Extensions;
 using Infrastructure.Extensions;
 using Infrastructure.Middlewares;
 using Infrastructure.Services.Persistence;
+using Users.WebApi.Constants;
 using Users.WebApi.Repositories;
 using Users.WebApi.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+ConfigureServices(builder);
+WebApplication app = builder.Build();
+await ConfigureMiddlewaresAsync(app);
+app.Run();
 
-builder.Services.AddControllers();
-builder.Services
-    .AddEndpointsApiExplorer()
-    .AddSwaggerGen()
-    .AddAutoMapper(typeof(Program))
-    .AddRabbitMqMessagePublisher("RabbitMqConfiguration");
-
-string connectionString = builder.Configuration.GetConnectionString("Default")
-                          ?? throw new InvalidOperationException("Default connection string is required");
-string masterConnectionString = builder.Configuration.GetConnectionString("Master")
-                                ?? throw new InvalidOperationException("Master connection string is required");
-
-builder.Services.AddSingleton<IDbContext, PostgresContext>(_ => new PostgresContext(
-    connectionString: connectionString,
-    masterConnectionString: masterConnectionString));
-
-builder.Services.AddFluentMigrationForPostgres(connectionString, Assembly.GetExecutingAssembly());
-
-builder.Services.AddTransient<IUsersRepository, UsersRepository>();
-builder.Services.AddTransient<UsersService>();
-
-var app = builder.Build();
-
-await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("usersdb"));
-
-app.UseHttpLogging();
-
-if (app.Environment.IsDevelopment())
+static void ConfigureServices(WebApplicationBuilder builder)
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    string connectionString = builder.Configuration.GetRequiredConnectionString("Default");
+    builder.Services
+        .AddSingleton<IDbContext, PostgresContext>(_ => new PostgresContext(
+            connectionString: connectionString,
+            masterConnectionString: builder.Configuration.GetRequiredConnectionString("Master")))
+        .AddFluentMigrationForPostgres(connectionString, Assembly.GetExecutingAssembly())
+        .AddTransient<IUsersRepository, UsersRepository>();
+
+    builder.Services
+        .AddRabbitMqMessagePublisher(builder.Configuration.GetRequiredSection("RabbitMqOptions"))
+        .AddAutoMapper(typeof(Program))
+        .AddTransient<UsersService>();
+
+    builder.Services
+        .AddJwtAuthentication(builder.Configuration.GetRequiredSection("JwtAuthOptions"))
+        .AddAuthorization(options => options
+            .AddPolicyBasedOnJwtPermissions(PermissionsConstants.AllPermissionsForPolicy));
+
+    builder.Services
+        .AddEndpointsApiExplorer()
+        .AddSwaggerGen(opt => opt.AddJwtSecurity())
+        .AddControllers();
 }
 
-app.UseMiddleware<ExceptionHandlerMiddleware>();
 
-app.MapControllers();
+static async Task ConfigureMiddlewaresAsync(WebApplication app)
+{
+    await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("UsersDb"));
 
-app.Run();
+    app.UseHttpLogging();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseMiddleware<ExceptionHandlerMiddleware>();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+}

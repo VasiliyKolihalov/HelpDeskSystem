@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Authentication.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Users.WebApi.Models.Users;
 using Users.WebApi.Services;
+using static Users.WebApi.Constants.PermissionsConstants;
 
 namespace Users.WebApi.Controllers;
 
@@ -28,20 +31,22 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<UserView> PostAsync(UserCreate userCreate)
+    public async Task<Guid> PostAsync(UserCreate userCreate)
     {
         return await _usersService.CreateAsync(userCreate);
     }
 
     [HttpPut]
-    public async Task<UserView> PutAsync(UserUpdate userUpdate)
+    [Authorize]
+    public async Task PutAsync(UserUpdate userUpdate)
     {
-        return await _usersService.UpdateAsync(userUpdate);
+        await _usersService.UpdateAsync(userUpdate, this.GetAccountFromJwt<Guid>());
     }
 
-    [HttpDelete]
-    public async Task<UserView> DeleteAsync(Guid id)
+    [HttpDelete("{id:guid}")]
+    [Authorize]
+    public async Task DeleteAsync(Guid id)
     {
-        return await _usersService.DeleteAsync(id);
+        await _usersService.DeleteAsync(id, this.GetAccountFromJwt<Guid>());
     }
 }

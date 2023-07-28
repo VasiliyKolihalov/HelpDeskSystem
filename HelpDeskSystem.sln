@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.WebApi", "Users.WebApi\Users.WebApi.csproj", "{A0A73246-B25F-44C7-B74E-62B47D3A355C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.WebApi", "Authentication.WebApi\Authentication.WebApi.csproj", "{3921292F-3DF6-4B68-866B-399915FB8ACF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.Infrastructure", "Authentication.Infrastructure\Authentication.Infrastructure.csproj", "{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,5 +39,13 @@ Global
 		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3921292F-3DF6-4B68-866B-399915FB8ACF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3921292F-3DF6-4B68-866B-399915FB8ACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3921292F-3DF6-4B68-866B-399915FB8ACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3921292F-3DF6-4B68-866B-399915FB8ACF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

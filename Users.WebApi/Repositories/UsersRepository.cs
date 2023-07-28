@@ -41,6 +41,18 @@ public class UsersRepository : IUsersRepository
         return user;
     }
 
+    public async Task<bool> IsExistsAsync(Guid id)
+    {
+        const string query = "select exists(select * from Users where Id = @id)";
+        await using DbConnection connection = _dbContext.CreateConnection();
+        var exists = false;
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            exists = await transaction.QuerySingleAsync<bool>(query, new { id });
+        });
+        return exists;
+    }
+
     public async Task InsertAsync(User item)
     {
         const string query = "insert into users values (@Id, @FirstName, @LastName, @Email)";

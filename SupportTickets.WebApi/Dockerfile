@@ -6,6 +6,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["SupportTickets.WebApi/SupportTickets.WebApi.csproj", "SupportTickets.WebApi/"]
+COPY ["Authentication.Infrastructure/Authentication.Infrastructure.csproj", "Authentication.Infrastructure/"]
 COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "SupportTickets.WebApi/SupportTickets.WebApi.csproj"
 COPY . .

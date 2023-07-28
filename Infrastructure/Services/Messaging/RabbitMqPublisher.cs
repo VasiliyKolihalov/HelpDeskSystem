@@ -10,7 +10,7 @@ namespace Infrastructure.Services.Messaging;
 
 public sealed class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
 {
-    private readonly RabbitMqConfiguration _rabbitMqConfiguration;
+    private readonly RabbitMqOptions _rabbitMqOptions;
     private readonly ConnectionFactory _connectionFactory;
     private readonly ILogger<RabbitMqPublisher> _logger;
 
@@ -18,11 +18,11 @@ public sealed class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
     private IModel? _model;
     
     public RabbitMqPublisher(
-        IOptions<RabbitMqConfiguration> rabbitMqConfiguration,
+        IOptions<RabbitMqOptions> rabbitMqOptions,
         ConnectionFactory connectionFactory,
         ILogger<RabbitMqPublisher> logger)
     {
-        _rabbitMqConfiguration = rabbitMqConfiguration.Value;
+        _rabbitMqOptions = rabbitMqOptions.Value;
         _connectionFactory = connectionFactory;
         _logger = logger;
     }
@@ -32,7 +32,7 @@ public sealed class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
         string data = JsonConvert.SerializeObject(message);
         byte[] body = Encoding.UTF8.GetBytes(data);
         _model.BasicPublish(
-            exchange: _rabbitMqConfiguration.ExchangeName,
+            exchange: _rabbitMqOptions.ExchangeName,
             routingKey: routingKey,
             basicProperties: null,
             body: body);
@@ -43,8 +43,8 @@ public sealed class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
         Policy
             .Handle<Exception>()
             .WaitAndRetry(
-                retryCount: _rabbitMqConfiguration.ConnectionRetryCount,
-                sleepDurationProvider: _ => _rabbitMqConfiguration.ConnectionRetrySleepDuration,
+                retryCount: _rabbitMqOptions.ConnectionRetryCount,
+                sleepDurationProvider: _ => _rabbitMqOptions.ConnectionRetrySleepDuration,
                 onRetry: (exception, timeSpan) =>
                 {
                     _logger.LogError(

@@ -1,25 +1,23 @@
-﻿using AutoMapper;
+﻿using Authentication.Infrastructure.Models;
+using AutoMapper;
 using Infrastructure.Exceptions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.SupportTickets;
-using SupportTickets.WebApi.Repositories.Users;
+using static SupportTickets.WebApi.Constants.PermissionsConstants.SupportTicketsPermissions;
 
 namespace SupportTickets.WebApi.Services;
 
 public class SupportTicketsService
 {
     private readonly ISupportTicketsRepository _supportTicketsRepository;
-    private readonly IUsersRepository _usersRepository;
     private readonly IMapper _mapper;
 
     public SupportTicketsService(
         ISupportTicketsRepository supportTicketsRepository,
-        IUsersRepository usersRepository,
         IMapper mapper)
     {
         _supportTicketsRepository = supportTicketsRepository;
-        _usersRepository = usersRepository;
         _mapper = mapper;
     }
 
@@ -30,47 +28,57 @@ public class SupportTicketsService
         return _mapper.Map<IEnumerable<SupportTicketPreview>>(supportTickets);
     }
 
-    public async Task<SupportTicketView> GetByIdAsync(Guid id)
+    public async Task<SupportTicketView> GetByIdAsync(Guid supportTicketId, Account<Guid> account)
     {
-        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(id)
-                                      ?? throw new NotFoundException($"SupportTicket with id: {id} not found");
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
+                                      ?? throw new NotFoundException(
+                                          $"SupportTicket with id: {supportTicketId} not found");
+
+        if (supportTicket.User.Id != account.Id && !account.HasPermission(GetById))
+            throw new UnauthorizedException();
 
         return _mapper.Map<SupportTicketView>(supportTicket);
     }
 
-    public async Task<SupportTicketPreview> CreateAsync(SupportTicketCreate supportTicketCreate)
-    {
-        User user = await _usersRepository.GetByIdAsync(supportTicketCreate.UserId)
-                    ?? throw new NotFoundException($"User with id {supportTicketCreate.UserId} not found");
 
+    public async Task<Guid> CreateAsync(
+        SupportTicketCreate supportTicketCreate,
+        Account<Guid> account)
+    {
         var supportTicket = _mapper.Map<SupportTicket>(supportTicketCreate);
         supportTicket.Id = Guid.NewGuid();
-        supportTicket.User = user;
+        supportTicket.User = _mapper.Map<User>(account);
 
         await _supportTicketsRepository.InsertAsync(supportTicket);
 
-        return _mapper.Map<SupportTicketPreview>(supportTicket);
+        return supportTicket.Id;
     }
 
-    public async Task<SupportTicketPreview> UpdateAsync(SupportTicketUpdate supportTicketUpdate)
+    public async Task UpdateAsync(
+        SupportTicketUpdate supportTicketUpdate,
+        Account<Guid> account)
     {
-        _ = await _supportTicketsRepository.GetByIdAsync(supportTicketUpdate.Id)
-            ?? throw new NotFoundException($"SupportTicket with id: {supportTicketUpdate.Id} not found");
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketUpdate.Id)
+                                      ?? throw new NotFoundException(
+                                          $"SupportTicket with id: {supportTicketUpdate.Id} not found");
 
-        var supportTicket = _mapper.Map<SupportTicket>(supportTicketUpdate);
+        if (supportTicket.User.Id != account.Id && !account.HasPermission(Update))
+            throw new UnauthorizedException();
 
-        await _supportTicketsRepository.UpdateAsync(supportTicket);
+        var supportTicketUpdated = _mapper.Map<SupportTicket>(supportTicketUpdate);
 
-        return _mapper.Map<SupportTicketPreview>(supportTicket);
+        await _supportTicketsRepository.UpdateAsync(supportTicketUpdated);
     }
 
-    public async Task<SupportTicketPreview> DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid supportTicketId, Account<Guid> account)
     {
-        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(id)
-                                      ?? throw new NotFoundException($"SupportTicket with id: {id} not found");
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
+                                      ?? throw new NotFoundException(
+                                          $"SupportTicket with id: {supportTicketId} not found");
 
-        await _supportTicketsRepository.DeleteAsync(id);
-
-        return _mapper.Map<SupportTicketPreview>(supportTicket);
+        if (supportTicket.User.Id != account.Id && !account.HasPermission(Delete))
+            throw new UnauthorizedException();
+        
+        await _supportTicketsRepository.DeleteAsync(supportTicketId);
     }
 }

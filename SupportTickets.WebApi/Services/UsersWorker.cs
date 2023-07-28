@@ -1,5 +1,4 @@
-﻿using Infrastructure.Services;
-using Infrastructure.Services.Messaging;
+﻿using Infrastructure.Services.Messaging;
 using Newtonsoft.Json;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.Users;
