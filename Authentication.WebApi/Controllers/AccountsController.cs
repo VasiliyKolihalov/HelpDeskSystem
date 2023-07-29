@@ -34,14 +34,14 @@ public class AccountsController : ControllerBase
     [Authorize]
     public async Task ChangePasswordAsync(UserAccountChangePassword userAccountChangePassword)
     {
-        await _accountsService.ChangePassword(userAccountChangePassword, this.GetAccountFromJwt<Guid>());
+        await _accountsService.ChangePasswordAsync(userAccountChangePassword, this.GetAccountFromJwt<Guid>());
     }
 
     [HttpDelete]
     [Authorize]
     public async Task DeleteAsync()
     {
-        await _accountsService.DeleteAccount(this.GetAccountFromJwt<Guid>());
+        await _accountsService.DeleteAsync(this.GetAccountFromJwt<Guid>());
     }
 
     [HttpPost("{accountId:guid}/roles/{roleId}")]

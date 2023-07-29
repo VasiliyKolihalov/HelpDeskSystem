@@ -20,7 +20,7 @@ public class UsersClient : IUsersClient
         _logger = logger;
     }
 
-    public async Task<Guid> SendCreateRequestAsync(UserCreate userCreate, string jwt)
+    public async Task<Guid> SendPostRequestAsync(UserCreate userCreate, string jwt)
     {
         _httpClient.DefaultRequestHeaders.AddJwtBearer(jwt);
         HttpResponseMessage result = null!;
@@ -46,7 +46,7 @@ public class UsersClient : IUsersClient
         return await result.Content.ReadFromJsonAsync<Guid>();
     }
 
-    public async Task SendUserRequestAsync(Guid userId, string jwt)
+    public async Task SendDeleteRequestAsync(Guid userId, string jwt)
     {
         _httpClient.DefaultRequestHeaders.AddJwtBearer(jwt);
 

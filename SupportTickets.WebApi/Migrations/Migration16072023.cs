@@ -9,20 +9,20 @@ public class Migration16072023 : Migration
     public override void Up()
     {
         Create
-            .Table("users")
-            .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("firstname").AsString(150).NotNullable()
-            .WithColumn("lastname").AsString(150).NotNullable();
+            .Table("Users")
+            .WithColumn("Id").AsGuid().PrimaryKey()
+            .WithColumn("Firstname").AsString(150).NotNullable()
+            .WithColumn("Lastname").AsString(150).NotNullable();
 
-        Create.Table("supporttickets")
-            .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("description").AsString(500).NotNullable()
-            .WithColumn("userid").AsGuid().ForeignKey("users", "id").OnDeleteOrUpdate(Rule.Cascade);
+        Create.Table("SupportTickets")
+            .WithColumn("Id").AsGuid().PrimaryKey()
+            .WithColumn("Description").AsString(500).NotNullable()
+            .WithColumn("UserId").AsGuid().ForeignKey("Users", "Id").OnDeleteOrUpdate(Rule.Cascade);
     }
 
     public override void Down()
     {
-        Delete.Table("supporttickets");
-        Delete.Table("users");
+        Delete.Table("SupportTickets");
+        Delete.Table("Users");
     }
 }

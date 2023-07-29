@@ -19,6 +19,7 @@ public static class ServiceCollectionExtensions
         @this
             .AddOptions<RabbitMqOptions>()
             .Bind(configurationSection)
+            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return @this.AddSingleton<ConnectionFactory>(_ =>
@@ -50,6 +51,7 @@ public static class ServiceCollectionExtensions
         @this
             .AddOptions<RabbitMqOptions>()
             .Bind(configurationSection)
+            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return @this.AddSingleton<ConnectionFactory>(_ =>

@@ -40,7 +40,7 @@ public class AccountsService
 
         var userAccount = _mapper.Map<UserAccount>(register);
 
-        userAccount.Id = await _usersClient.SendCreateRequestAsync(
+        userAccount.Id = await _usersClient.SendPostRequestAsync(
             userCreate: _mapper.Map<UserCreate>(register),
             jwt: _jwtService.GenerateJwt(new Account<Guid>
             {
@@ -65,7 +65,7 @@ public class AccountsService
         return _jwtService.GenerateJwt(_mapper.Map<Account<Guid>>(userAccount));
     }
 
-    public async Task ChangePassword(UserAccountChangePassword changePassword, Account<Guid> account)
+    public async Task ChangePasswordAsync(UserAccountChangePassword changePassword, Account<Guid> account)
     {
         UserAccount userAccount = (await _accountsRepository.GetByIdAsync(account.Id))!;
 
@@ -79,9 +79,9 @@ public class AccountsService
         await _accountsRepository.UpdateAsync(userAccount);
     }
 
-    public async Task DeleteAccount(Account<Guid> account)
+    public async Task DeleteAsync(Account<Guid> account)
     {
-        await _usersClient.SendUserRequestAsync(
+        await _usersClient.SendDeleteRequestAsync(
             userId: account.Id,
             jwt: _jwtService.GenerateJwt(new Account<Guid>
             {

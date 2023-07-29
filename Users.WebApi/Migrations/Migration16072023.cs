@@ -8,15 +8,15 @@ public class Migration16072023 : Migration
     public override void Up()
     {
         Create
-            .Table("users")
-            .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("firstname").AsString(150).NotNullable()
-            .WithColumn("lastname").AsString(150).NotNullable()
-            .WithColumn("email").AsString(150).NotNullable();
+            .Table("Users")
+            .WithColumn("Id").AsGuid().PrimaryKey()
+            .WithColumn("Firstname").AsString(150).NotNullable()
+            .WithColumn("Lastname").AsString(150).NotNullable()
+            .WithColumn("Email").AsString(150).NotNullable();
     }
 
     public override void Down()
     {
-        Delete.Table("users");
+        Delete.Table("Users");
     }
 }

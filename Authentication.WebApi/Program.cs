@@ -32,6 +32,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services
         .AddOptions<PollyOptions>()
         .Bind(builder.Configuration.GetRequiredSection("PollyOptions"))
+        .ValidateDataAnnotations()
         .ValidateOnStart();
 
     builder.Services
@@ -45,7 +46,10 @@ static void ConfigureServices(WebApplicationBuilder builder)
             name: HttpClientNames.Users,
             configureClient: client =>
             {
-                client.BaseAddress = new Uri(builder.Configuration.GetRequiredSection("HttpUrls").GetValue<string>("Users.WebApi"));
+                client.BaseAddress = new Uri(
+                    builder.Configuration
+                        .GetRequiredSection("HttpUrls")
+                        .GetRequiredValue<string>("Users.WebApi"));
             });
 
 
@@ -65,6 +69,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
 
 static async Task ConfigureMiddlewaresAsync(WebApplication app)
 {
+    Console.WriteLine("хуй");
     await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("AccountsDb"));
 
     app.UseHttpLogging();
