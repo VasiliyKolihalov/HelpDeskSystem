@@ -1,10 +1,9 @@
 ﻿using Authentication.Infrastructure.Extensions;
-using Authentication.Infrastructure.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Services;
-using static SupportTickets.WebApi.Constants.PermissionsConstants;
+using static SupportTickets.WebApi.Constants.PermissionNames;
 
 namespace SupportTickets.WebApi.Controllers;
 
@@ -21,7 +20,7 @@ public class SupportTicketsController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = SupportTicketsPermissions.GetAll)]
+    [Authorize(Policy = SupportTicketPermissions.GetAll)]
     public async Task<IEnumerable<SupportTicketPreview>> GetAllAsync()
     {
         return await _supportTicketsService.GetAllAsync();

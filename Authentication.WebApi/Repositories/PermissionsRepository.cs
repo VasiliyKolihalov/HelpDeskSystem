@@ -1,5 +1,4 @@
 ﻿using System.Data.Common;
-using Authentication.WebApi.Models;
 using Authentication.WebApi.Models.Permissions;
 using Dapper.Transaction;
 using Infrastructure.Extensions;

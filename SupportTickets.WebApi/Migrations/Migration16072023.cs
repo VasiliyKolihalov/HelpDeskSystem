@@ -1,4 +1,5 @@
-﻿using FluentMigrator;
+﻿using System.Data;
+using FluentMigrator;
 
 namespace SupportTickets.WebApi.Migrations;
 
@@ -16,7 +17,7 @@ public class Migration16072023 : Migration
         Create.Table("supporttickets")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("description").AsString(500).NotNullable()
-            .WithColumn("userid").AsGuid().ForeignKey("users", "id");
+            .WithColumn("userid").AsGuid().ForeignKey("users", "id").OnDeleteOrUpdate(Rule.Cascade);
     }
 
     public override void Down()

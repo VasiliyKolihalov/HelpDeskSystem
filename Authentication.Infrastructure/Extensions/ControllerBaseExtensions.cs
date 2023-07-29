@@ -2,7 +2,6 @@
 using Authentication.Infrastructure.Constants;
 using Authentication.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Authentication.Infrastructure.Extensions;
 

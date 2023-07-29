@@ -1,8 +1,8 @@
 ﻿namespace Authentication.WebApi.Constants;
 
-public static class PermissionsConstants
+public static class PermissionNames
 {
-    public static class AccountsPermissions
+    public static class AccountPermissions
     {
         private const string Account = "accounts";
         public const string AddRole = Account + ".addtorole";
@@ -15,7 +15,7 @@ public static class PermissionsConstants
         };
     }
 
-    public static class RolesPermissions
+    public static class RolePermissions
     {
         private const string Roles = "roles";
         public const string Create = Roles + ".create";
@@ -29,9 +29,14 @@ public static class PermissionsConstants
             Delete
         };
     }
-    
-  
+
+    public static class HttpClientPermissions
+    {
+        public const string UsersCreate = "users.create";
+        public const string UsersDelete = "users.delete";
+    }
+
     public static readonly IEnumerable<string> AllPermissionsForPolicy =
-        AccountsPermissions.PermissionsForPolicy
-            .Concat(RolesPermissions.PermissionsForPolicy);
+        AccountPermissions.PermissionsForPolicy
+            .Concat(RolePermissions.PermissionsForPolicy);
 }

@@ -1,5 +1,4 @@
-﻿using Authentication.WebApi.Models;
-using Authentication.WebApi.Models.Permissions;
+﻿using Authentication.WebApi.Models.Permissions;
 
 namespace Authentication.WebApi.Repositories;
 

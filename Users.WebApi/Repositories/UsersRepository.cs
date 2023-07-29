@@ -1,9 +1,7 @@
-﻿using System.Data;
-using System.Data.Common;
+﻿using System.Data.Common;
 using Dapper.Transaction;
 using Infrastructure.Extensions;
 using Infrastructure.Services.Persistence;
-using Npgsql;
 using Users.WebApi.Models.Users;
 
 namespace Users.WebApi.Repositories;

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Users.WebApi.Models.Users;
 using Users.WebApi.Services;
-using static Users.WebApi.Constants.PermissionsConstants;
+using static Users.WebApi.Constants.PermissionNames;
 
 namespace Users.WebApi.Controllers;
 
@@ -31,6 +31,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = UserPermissions.Create)]
     public async Task<Guid> PostAsync(UserCreate userCreate)
     {
         return await _usersService.CreateAsync(userCreate);
@@ -44,9 +45,9 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize]
+    [Authorize(Policy = UserPermissions.Delete)]
     public async Task DeleteAsync(Guid id)
     {
-        await _usersService.DeleteAsync(id, this.GetAccountFromJwt<Guid>());
+        await _usersService.DeleteAsync(id);
     }
 }

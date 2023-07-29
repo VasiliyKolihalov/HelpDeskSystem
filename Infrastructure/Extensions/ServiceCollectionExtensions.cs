@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using FluentMigrator.Runner;
 using Infrastructure.Models;
-using Infrastructure.Services;
 using Infrastructure.Services.Messaging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +19,6 @@ public static class ServiceCollectionExtensions
         @this
             .AddOptions<RabbitMqOptions>()
             .Bind(configurationSection)
-            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return @this.AddSingleton<ConnectionFactory>(_ =>
@@ -52,7 +50,6 @@ public static class ServiceCollectionExtensions
         @this
             .AddOptions<RabbitMqOptions>()
             .Bind(configurationSection)
-            .ValidateDataAnnotations()
             .ValidateOnStart();
 
         return @this.AddSingleton<ConnectionFactory>(_ =>

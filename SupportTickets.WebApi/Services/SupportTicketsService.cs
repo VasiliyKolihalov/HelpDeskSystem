@@ -4,7 +4,7 @@ using Infrastructure.Exceptions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.SupportTickets;
-using static SupportTickets.WebApi.Constants.PermissionsConstants.SupportTicketsPermissions;
+using static SupportTickets.WebApi.Constants.PermissionNames.SupportTicketPermissions;
 
 namespace SupportTickets.WebApi.Services;
 

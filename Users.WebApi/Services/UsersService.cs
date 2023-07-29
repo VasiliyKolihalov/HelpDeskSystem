@@ -4,7 +4,7 @@ using Infrastructure.Exceptions;
 using Infrastructure.Services.Messaging;
 using Users.WebApi.Models.Users;
 using Users.WebApi.Repositories;
-using static Users.WebApi.Constants.PermissionsConstants.UsersPermissions;
+using static Users.WebApi.Constants.PermissionNames.UserPermissions;
 
 namespace Users.WebApi.Services;
 
@@ -60,14 +60,10 @@ public class UsersService
         _rabbitMqPublisher.PublishMessage(user, "users.updated");
     }
 
-    public async Task DeleteAsync(Guid userId, Account<Guid> account)
+    public async Task DeleteAsync(Guid userId)
     {
         User user = await _usersRepository.GetByIdAsync(userId)
                     ?? throw new NotFoundException($"User with id: {userId} not found");
-
-        if (userId != account.Id || !account.HasPermission(Delete))
-            throw new UnauthorizedException();
-
 
         await _usersRepository.DeleteAsync(userId);
         _rabbitMqPublisher.PublishMessage(user, "users.deleted");

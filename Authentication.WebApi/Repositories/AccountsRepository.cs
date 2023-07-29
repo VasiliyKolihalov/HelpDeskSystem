@@ -1,5 +1,4 @@
 ﻿using System.Data.Common;
-using Authentication.WebApi.Models;
 using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Models.Permissions;
 using Authentication.WebApi.Models.Roles;
@@ -16,6 +15,47 @@ public class AccountsRepository : IAccountsRepository
     public AccountsRepository(IDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    public async Task<IEnumerable<UserAccount>> GetAllAsync()
+    {
+        const string accountQuery = @"select * from Accounts";
+        const string rolesQuery = @"select * from Roles roles
+                                    inner join AccountsRoles accountsRoles on roles.Id = accountsRoles.RoleId
+                                    where accountsRoles.AccountId = @Id";
+        const string permissionsQuery = @"select * from Permissions
+                                          inner join RolesPermissions rolesPermissions on Permissions.Id = rolesPermissions.PermissionId
+                                          where rolesPermissions.RoleId = @Id";
+        IEnumerable<UserAccount> accounts = null!;
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            accounts = (await transaction.QueryAsync<UserAccount>(accountQuery)).ToList();
+            if (!accounts.Any())
+                return;
+
+            foreach (UserAccount account in accounts)
+            {
+                IEnumerable<UserRole> roles =
+                    (await transaction.QueryAsync<UserRole>(rolesQuery, param: new { account.Id })).ToList();
+
+                if (!roles.Any())
+                {
+                    account.Roles = roles;
+                    return;
+                }
+
+                foreach (UserRole role in roles)
+                {
+                    role.Permissions = await transaction.QueryAsync<UserPermission>(
+                        sql: permissionsQuery,
+                        param: new { role.Id });
+                }
+
+                account.Roles = roles;
+            }
+        });
+        return accounts;
     }
 
     public async Task<UserAccount?> GetByIdAsync(Guid id)
@@ -40,7 +80,7 @@ public class AccountsRepository : IAccountsRepository
 
             if (!roles.Any())
             {
-                account.Roles = Array.Empty<UserRole>();
+                account.Roles = roles;
                 return;
             }
 
@@ -54,6 +94,42 @@ public class AccountsRepository : IAccountsRepository
             account.Roles = roles;
         });
         return account;
+    }
+
+    public async Task<bool> IsExistsAsync(Guid id)
+    {
+        const string query = "select exists(select * from Accounts where Id = @id)";
+        await using DbConnection connection = _dbContext.CreateConnection();
+        var exists = false;
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            exists = await transaction.QuerySingleAsync<bool>(query, new { id });
+        });
+        return exists;
+    }
+
+    public async Task InsertAsync(UserAccount userAccount)
+    {
+        const string query = "insert into Accounts values (@Id, @Email, @PasswordHash)";
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(
+            async transaction => await transaction.ExecuteAsync(query, userAccount));
+    }
+
+    public async Task UpdateAsync(UserAccount item)
+    {
+        const string query = "update Accounts set Email = @Email, PasswordHash = @PasswordHash where Id = @Id";
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(
+            async transaction => await transaction.ExecuteAsync(query, item ));
+    }
+
+    public async Task DeleteAsync(Guid id)
+    {
+        const string query = "delete from Accounts where Id = @id";
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(
+            async transaction => await transaction.ExecuteAsync(query, new { id }));
     }
 
     public async Task<UserAccount?> GetByEmailAsync(string email)
@@ -78,7 +154,7 @@ public class AccountsRepository : IAccountsRepository
 
             if (!roles.Any())
             {
-                account.Roles = Array.Empty<UserRole>();
+                account.Roles = roles;
                 return;
             }
 
@@ -93,7 +169,7 @@ public class AccountsRepository : IAccountsRepository
         });
         return account;
     }
-
+    
     public async Task<bool> IsExistsAsync(string email)
     {
         const string query = "select exists(select * from Accounts where Email = @email)";
@@ -104,14 +180,6 @@ public class AccountsRepository : IAccountsRepository
             exists = await transaction.QuerySingleAsync<bool>(query, new { email });
         });
         return exists;
-    }
-
-    public async Task InsertAsync(UserAccount userAccount)
-    {
-        const string query = "insert into Accounts values (@Id, @Email, @PasswordHash)";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(
-            async transaction => await transaction.ExecuteAsync(query, userAccount));
     }
 
     public async Task AddRoleAsync(Guid accountId, string roleId)
