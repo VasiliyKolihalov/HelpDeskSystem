@@ -44,6 +44,34 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/gateway/accounts/password/change",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/accounts/password/change",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/accounts",
+      "UpstreamHttpMethod": [
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/accounts",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/gateway/permissions",
       "UpstreamHttpMethod": [
         "Get"

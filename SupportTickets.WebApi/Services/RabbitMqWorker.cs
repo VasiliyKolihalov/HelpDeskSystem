@@ -1,21 +1,20 @@
 ﻿using Infrastructure.Services.Messaging;
 using Newtonsoft.Json;
 using SupportTickets.WebApi.Models.Users;
-using SupportTickets.WebApi.Repositories.Users;
 
 namespace SupportTickets.WebApi.Services;
 
-public class UsersWorker : IHostedService
+public class RabbitMqWorker : IHostedService
 {
     private readonly IRabbitMqConsumer _rabbitMqConsumer;
-    private readonly IUsersRepository _usersRepository;
+    private readonly IUsersService _usersService;
 
-    public UsersWorker(
+    public RabbitMqWorker(
         IRabbitMqConsumer rabbitMqConsumer,
-        IUsersRepository usersRepository)
+        IUsersService usersService)
     {
         _rabbitMqConsumer = rabbitMqConsumer;
-        _usersRepository = usersRepository;
+        _usersService = usersService;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -32,19 +31,19 @@ public class UsersWorker : IHostedService
     private async Task HandleUserCreatedAsync(string json)
     {
         var user = JsonConvert.DeserializeObject<User>(json)!;
-        await _usersRepository.InsertAsync(user);
+        await _usersService.CreateAsync(user);
     }
 
     private async Task HandleUserUpdatedAsync(string json)
     {
         var user = JsonConvert.DeserializeObject<User>(json)!;
-        await _usersRepository.UpdateAsync(user);
+        await _usersService.UpdateAsync(user);
     }
 
     private async Task HandleUserDeletedAsync(string json)
     {
         var user = JsonConvert.DeserializeObject<User>(json)!;
-        await _usersRepository.DeleteAsync(user.Id);
+        await _usersService.DeleteAsync(user.Id);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

@@ -30,13 +30,14 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services
         .AddRabbitMqMessageConsumer(builder.Configuration.GetRequiredSection("RabbitMqOptions"))
         .AddAutoMapper(typeof(Program))
-        .AddHostedService<UsersWorker>()
-        .AddTransient<SupportTicketsService>();
+        .AddTransient<IUsersService, UsersService>()
+        .AddTransient<SupportTicketsService>()
+        .AddHostedService<RabbitMqWorker>();
 
     builder.Services
         .AddJwtAuthentication(builder.Configuration.GetRequiredSection("JwtAuthOptions"))
         .AddAuthorization(options => options
-            .AddPolicyBasedOnJwtPermissions(PermissionsConstants.AllPermissionsForPolicy));
+            .AddPolicyBasedOnJwtPermissions(PermissionNames.AllPermissionsForPolicy));
 
     builder.Services
         .AddEndpointsApiExplorer()

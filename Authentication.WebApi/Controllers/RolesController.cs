@@ -1,9 +1,8 @@
-﻿using Authentication.WebApi.Models;
-using Authentication.WebApi.Models.Roles;
+﻿using Authentication.WebApi.Models.Roles;
 using Authentication.WebApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Authentication.WebApi.Constants.PermissionsConstants;
+using static Authentication.WebApi.Constants.PermissionNames;
 
 namespace Authentication.WebApi.Controllers;
 
@@ -31,21 +30,21 @@ public class RolesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = RolesPermissions.Create)]
+    [Authorize(Policy = RolePermissions.Create)]
     public async Task PostAsync(UserRoleCreate userCreate)
     {
         await _rolesService.CreateAsync(userCreate);
     }
 
     [HttpPut]
-    [Authorize(Policy = RolesPermissions.Update)]
+    [Authorize(Policy = RolePermissions.Update)]
     public async Task PutAsync(UserRoleUpdate userUpdate)
     {
         await _rolesService.UpdateAsync(userUpdate);
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Policy = RolesPermissions.Delete)]
+    [Authorize(Policy = RolePermissions.Delete)]
     public async Task DeleteAsync(string id)
     {
         await _rolesService.DeleteAsync(id);

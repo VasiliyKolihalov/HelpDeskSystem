@@ -4,7 +4,6 @@ using Authentication.Infrastructure.Constants;
 using Authentication.Infrastructure.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace Authentication.Infrastructure.Services;
 
@@ -29,7 +28,7 @@ public class JwtService : IJwtService
                                              $"Failed to convert {typeof(TId).Name} to string"))
         };
 
-        if (account.Roles.Any())
+        if (account.Roles?.Any() ?? false)
         {
             foreach (Role role in account.Roles)
             {
@@ -37,7 +36,7 @@ public class JwtService : IJwtService
             }
         }
 
-        if (account.Permissions.Any())
+        if (account.Permissions?.Any() ?? false)
         {
             foreach (Permission permission in account.Permissions)
             {

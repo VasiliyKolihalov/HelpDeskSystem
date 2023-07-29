@@ -1,11 +1,12 @@
 ﻿using Authentication.Infrastructure.Models;
 using Authentication.Infrastructure.Services;
-using Authentication.WebApi.Models;
+using Authentication.WebApi.Clients.Users;
 using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Models.Http.Users;
 using Authentication.WebApi.Repositories;
 using AutoMapper;
 using Infrastructure.Exceptions;
+using static Authentication.WebApi.Constants.PermissionNames;
 using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace Authentication.WebApi.Services;
@@ -15,52 +16,79 @@ public class AccountsService
     private readonly IAccountsRepository _accountsRepository;
     private readonly IRolesRepository _rolesRepository;
     private readonly IJwtService _jwtService;
-    private readonly HttpClient _httpClient;
+    private readonly IUsersClient _usersClient;
     private readonly IMapper _mapper;
 
     public AccountsService(
         IAccountsRepository accountsRepository,
         IRolesRepository rolesRepository,
         IJwtService jwtService,
-        IHttpClientFactory httpClientFactory,
+        IUsersClient usersClient,
         IMapper mapper)
     {
         _accountsRepository = accountsRepository;
         _rolesRepository = rolesRepository;
         _jwtService = jwtService;
-        _httpClient = httpClientFactory.CreateClient("Users.WebApi");
+        _usersClient = usersClient;
         _mapper = mapper;
     }
 
-    public async Task<string> RegisterAsync(UserAccountRegister userAccountRegister)
+    public async Task<string> RegisterAsync(UserAccountRegister register)
     {
-        if (await _accountsRepository.IsExistsAsync(userAccountRegister.Email))
-            throw new BadRequestException($"Account with email {userAccountRegister.Email} already exist");
+        if (await _accountsRepository.IsExistsAsync(register.Email))
+            throw new BadRequestException($"Account with email {register.Email} already exist");
 
-        var userAccount = _mapper.Map<UserAccount>(userAccountRegister);
-        userAccount.Id = await SendCreateUserRequest(_mapper.Map<UserCreate>(userAccountRegister));
-        userAccount.PasswordHash = BCryptNet.HashPassword(userAccountRegister.Password);
+        var userAccount = _mapper.Map<UserAccount>(register);
+
+        userAccount.Id = await _usersClient.SendPostRequestAsync(
+            userCreate: _mapper.Map<UserCreate>(register),
+            jwt: _jwtService.GenerateJwt(new Account<Guid>
+            {
+                Permissions = new[] { new Permission { Id = HttpClientPermissions.UsersCreate } }
+            }));
+
+        userAccount.PasswordHash = BCryptNet.HashPassword(register.Password);
         await _accountsRepository.InsertAsync(userAccount);
 
         return _jwtService.GenerateJwt(_mapper.Map<Account<Guid>>(userAccount));
     }
 
-    private async Task<Guid> SendCreateUserRequest(UserCreate userCreate)
+    public async Task<string> LoginAsync(UserAccountLogin login)
     {
-        HttpResponseMessage result = await _httpClient.PostAsJsonAsync("users", userCreate);
-        return await result.Content.ReadFromJsonAsync<Guid>();
-    }
-
-    public async Task<string> LoginAsync(UserAccountLogin userAccountLogin)
-    {
-        UserAccount userAccount = await _accountsRepository.GetByEmailAsync(userAccountLogin.Email)
+        UserAccount userAccount = await _accountsRepository.GetByEmailAsync(login.Email)
                                   ?? throw new BadRequestException(
-                                      $"User with email {userAccountLogin.Email} dose not exist");
+                                      $"User with email {login.Email} dose not exist");
 
-        if (!BCryptNet.Verify(text: userAccountLogin.Password, hash: userAccount.PasswordHash))
+        if (!BCryptNet.Verify(text: login.Password, hash: userAccount.PasswordHash))
             throw new BadRequestException("Incorrect password");
 
         return _jwtService.GenerateJwt(_mapper.Map<Account<Guid>>(userAccount));
+    }
+
+    public async Task ChangePasswordAsync(UserAccountChangePassword changePassword, Account<Guid> account)
+    {
+        UserAccount userAccount = (await _accountsRepository.GetByIdAsync(account.Id))!;
+
+        if (!BCryptNet.Verify(text: changePassword.CurrentPassword, hash: userAccount.PasswordHash))
+            throw new BadRequestException("Incorrect password");
+
+        if (changePassword.CurrentPassword == changePassword.NewPassword)
+            throw new BadRequestException("This password already use");
+
+        userAccount.PasswordHash = BCryptNet.HashPassword(changePassword.NewPassword);
+        await _accountsRepository.UpdateAsync(userAccount);
+    }
+
+    public async Task DeleteAsync(Account<Guid> account)
+    {
+        await _usersClient.SendDeleteRequestAsync(
+            userId: account.Id,
+            jwt: _jwtService.GenerateJwt(new Account<Guid>
+            {
+                Permissions = new[] { new Permission { Id = HttpClientPermissions.UsersDelete } }
+            }));
+
+        await _accountsRepository.DeleteAsync(account.Id);
     }
 
     public async Task AddToRoleAsync(Guid toAccountId, string roleId)

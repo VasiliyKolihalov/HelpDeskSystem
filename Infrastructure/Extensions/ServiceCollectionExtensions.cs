@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using FluentMigrator.Runner;
 using Infrastructure.Models;
-using Infrastructure.Services;
 using Infrastructure.Services.Messaging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

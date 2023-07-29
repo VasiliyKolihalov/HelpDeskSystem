@@ -1,8 +1,8 @@
 namespace Users.WebApi.Constants;
 
-public static class PermissionsConstants
+public static class PermissionNames
 {
-    public static class UsersPermissions
+    public static class UserPermissions
     {
         private const string Users = "users";
         public const string Create = Users + ".create";
@@ -17,5 +17,5 @@ public static class PermissionsConstants
         };
     }
 
-    public static readonly IEnumerable<string> AllPermissionsForPolicy = UsersPermissions.PermissionsForPolicy;
+    public static readonly IEnumerable<string> AllPermissionsForPolicy = UserPermissions.PermissionsForPolicy;
 }

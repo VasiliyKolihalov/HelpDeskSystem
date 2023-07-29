@@ -1,5 +1,4 @@
 ﻿using Authentication.Infrastructure.Models;
-using Authentication.WebApi.Models;
 using Authentication.WebApi.Models.Permissions;
 using AutoMapper;
 

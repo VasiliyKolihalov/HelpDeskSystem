@@ -1,8 +1,9 @@
-﻿using Authentication.WebApi.Models.Accounts;
+﻿using Authentication.Infrastructure.Extensions;
+using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static Authentication.WebApi.Constants.PermissionsConstants;
+using static Authentication.WebApi.Constants.PermissionNames;
 
 namespace Authentication.WebApi.Controllers;
 
@@ -29,15 +30,29 @@ public class AccountsController : ControllerBase
         return await _accountsService.LoginAsync(userAccountLogin);
     }
 
+    [HttpPut("password/change")]
+    [Authorize]
+    public async Task ChangePasswordAsync(UserAccountChangePassword userAccountChangePassword)
+    {
+        await _accountsService.ChangePasswordAsync(userAccountChangePassword, this.GetAccountFromJwt<Guid>());
+    }
+
+    [HttpDelete]
+    [Authorize]
+    public async Task DeleteAsync()
+    {
+        await _accountsService.DeleteAsync(this.GetAccountFromJwt<Guid>());
+    }
+
     [HttpPost("{accountId:guid}/roles/{roleId}")]
-    [Authorize(Policy = AccountsPermissions.AddRole)]
+    [Authorize(Policy = AccountPermissions.AddRole)]
     public async Task AddToRoleAsync(Guid accountId, string roleId)
     {
         await _accountsService.AddToRoleAsync(accountId, roleId);
     }
 
     [HttpDelete("{accountId:guid}/roles/{roleId}")]
-    [Authorize(Policy = AccountsPermissions.RemoveRole)]
+    [Authorize(Policy = AccountPermissions.RemoveRole)]
     public async Task RemoveFromRoleAsync(Guid accountId, string roleId)
     {
         await _accountsService.RemoveFromRoleAsync(accountId, roleId);

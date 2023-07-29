@@ -2,7 +2,6 @@
 using Dapper.Transaction;
 using Infrastructure.Extensions;
 using Infrastructure.Services.Persistence;
-using Npgsql;
 using SupportTickets.WebApi.Models.Users;
 
 namespace SupportTickets.WebApi.Repositories.Users;

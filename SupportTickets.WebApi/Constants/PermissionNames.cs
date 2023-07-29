@@ -1,8 +1,8 @@
 ﻿namespace SupportTickets.WebApi.Constants;
 
-public static class PermissionsConstants
+public static class PermissionNames
 {
-    public static class SupportTicketsPermissions
+    public static class SupportTicketPermissions
     {
         private const string SupportTicket = "supporttickets";
         public const string GetAll = SupportTicket + ".getall";
@@ -16,5 +16,5 @@ public static class PermissionsConstants
         };
     }
 
-    public static readonly IEnumerable<string> AllPermissionsForPolicy = SupportTicketsPermissions.PermissionsForPolicy;
+    public static readonly IEnumerable<string> AllPermissionsForPolicy = SupportTicketPermissions.PermissionsForPolicy;
 }
