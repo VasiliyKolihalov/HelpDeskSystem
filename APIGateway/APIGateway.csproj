@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="MMLib.SwaggerForOcelot" Version="7.0.0" />
       <PackageReference Include="Ocelot" Version="19.0.2" />
     </ItemGroup>
 
@@ -16,6 +17,10 @@
       <Content Include="..\.dockerignore">
         <Link>.dockerignore</Link>
       </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

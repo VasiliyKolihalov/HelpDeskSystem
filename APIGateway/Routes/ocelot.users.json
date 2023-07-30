@@ -14,7 +14,8 @@
           "Host": "users_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Users"
     },
     {
       "UpstreamPathTemplate": "/gateway/users/{id}",
@@ -29,7 +30,8 @@
           "Host": "users_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Users"
     }
   ]
 }
