@@ -1,14 +1,29 @@
+using MMLib.SwaggerForOcelot.DependencyInjection;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Configuration
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddOcelot("Routes", builder.Environment);
-
-builder.Services.AddOcelot(builder.Configuration);
-
-var app = builder.Build();
-await app.UseOcelot();
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+ConfigureServices(builder);
+WebApplication app = builder.Build();
+await ConfigureMiddlewaresAsync(app);
 app.Run();
+
+static void ConfigureServices(WebApplicationBuilder builder)
+{
+    builder.Configuration.AddOcelotWithSwaggerSupport(options => options.Folder = "Routes");
+    builder.Services
+        .AddEndpointsApiExplorer()
+        .AddSwaggerForOcelot(builder.Configuration)
+        .AddOcelot(builder.Configuration);
+}
+
+static async Task ConfigureMiddlewaresAsync(WebApplication app)
+{
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerForOcelotUI();
+    }
+
+    await app.UseOcelot();
+}

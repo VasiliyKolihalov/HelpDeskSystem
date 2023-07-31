@@ -12,7 +12,8 @@
           "Host": "authentication_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     },
     {
       "UpstreamPathTemplate": "/gateway/accounts/login",
@@ -26,7 +27,8 @@
           "Host": "authentication_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     },
     {
       "UpstreamPathTemplate": "/gateway/accounts/{accountId}/roles/{roleId}",
@@ -41,7 +43,8 @@
           "Host": "authentication_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     },
     {
       "UpstreamPathTemplate": "/gateway/accounts/password/change",
@@ -55,7 +58,8 @@
           "Host": "authentication_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     },
     {
       "UpstreamPathTemplate": "/gateway/accounts",
@@ -69,7 +73,8 @@
           "Host": "authentication_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     },
     {
       "UpstreamPathTemplate": "/gateway/permissions",
@@ -83,7 +88,8 @@
           "Host": "authentication_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     },
     {
       "UpstreamPathTemplate": "/gateway/roles",
@@ -99,7 +105,8 @@
           "Host": "authentication_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     },
     {
       "UpstreamPathTemplate": "/gateway/roles/{id}",
@@ -114,7 +121,8 @@
           "Host": "support_tickets_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "Authentication"
     }
   ]
 }

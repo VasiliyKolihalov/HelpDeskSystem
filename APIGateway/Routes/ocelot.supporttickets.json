@@ -14,7 +14,8 @@
           "Host": "support_tickets_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "SupportTickets"
     },
     {
       "UpstreamPathTemplate": "/gateway/supporttickets/{id}",
@@ -29,7 +30,8 @@
           "Host": "support_tickets_webapi",
           "Port": 80
         }
-      ]
+      ],
+      "SwaggerKey": "SupportTickets"
     }
   ]
 }
