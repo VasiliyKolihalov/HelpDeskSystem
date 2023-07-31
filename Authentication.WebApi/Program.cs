@@ -29,11 +29,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
         .AddTransient<IRolesRepository, RolesRepository>()
         .AddTransient<IPermissionsRepository, PermissionsRepository>();
 
-    builder.Services
-        .AddOptions<PollyOptions>()
-        .Bind(builder.Configuration.GetRequiredSection("PollyOptions"))
-        .ValidateDataAnnotations()
-        .ValidateOnStart();
+    builder.Services.AddOptionsWithDataAnnotationsValidation<PollyOptions>(
+        builder.Configuration.GetRequiredSection("PollyOptions"));
 
     builder.Services
         .AddAutoMapper(typeof(Program))
@@ -69,7 +66,6 @@ static void ConfigureServices(WebApplicationBuilder builder)
 
 static async Task ConfigureMiddlewaresAsync(WebApplication app)
 {
-    Console.WriteLine("хуй");
     await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("AccountsDb"));
 
     app.UseHttpLogging();

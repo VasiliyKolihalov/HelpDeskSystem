@@ -28,8 +28,8 @@ public class UsersClient : IUsersClient
         await Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(
-                retryCount: _pollyOptions.RetryCount,
-                sleepDurationProvider: _ => _pollyOptions.RetrySleepDuration,
+                retryCount: _pollyOptions.RetryCount!.Value,
+                sleepDurationProvider: _ => _pollyOptions.RetrySleepDuration!.Value,
                 onRetry: (exception, timeSpan) =>
                 {
                     _logger.LogError(
@@ -53,8 +53,8 @@ public class UsersClient : IUsersClient
         await Policy
             .Handle<Exception>()
             .WaitAndRetryAsync(
-                retryCount: _pollyOptions.RetryCount,
-                sleepDurationProvider: _ => _pollyOptions.RetrySleepDuration,
+                retryCount: _pollyOptions.RetryCount!.Value,
+                sleepDurationProvider: _ => _pollyOptions.RetrySleepDuration!.Value,
                 onRetry: (exception, timeSpan) =>
                 {
                     _logger.LogError(
