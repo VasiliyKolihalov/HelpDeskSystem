@@ -19,8 +19,4 @@
       </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
-    </ItemGroup>
-
 </Project>
