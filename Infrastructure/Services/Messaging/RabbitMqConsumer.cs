@@ -20,7 +20,7 @@ public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     public RabbitMqConsumer(
         ConnectionFactory connectionFactory,
-        IOptions<RabbitMqOptions> rabbitMqOptions, 
+        IOptions<RabbitMqOptions> rabbitMqOptions,
         ILogger<RabbitMqConsumer> logger)
     {
         _connectionFactory = connectionFactory;
@@ -33,8 +33,8 @@ public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         Policy
             .Handle<Exception>()
             .WaitAndRetry(
-                retryCount: _rabbitMqOptions.ConnectionRetryCount,
-                sleepDurationProvider: _ => _rabbitMqOptions.ConnectionRetrySleepDuration,
+                retryCount: _rabbitMqOptions.ConnectionRetryCount!.Value,
+                sleepDurationProvider: _ => _rabbitMqOptions.ConnectionRetrySleepDuration!.Value,
                 onRetry: (exception, timeSpan) =>
                 {
                     _logger.LogError(

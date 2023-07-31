@@ -16,7 +16,7 @@ public sealed class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
 
     private IConnection? _connection;
     private IModel? _model;
-    
+
     public RabbitMqPublisher(
         IOptions<RabbitMqOptions> rabbitMqOptions,
         ConnectionFactory connectionFactory,
@@ -43,8 +43,8 @@ public sealed class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
         Policy
             .Handle<Exception>()
             .WaitAndRetry(
-                retryCount: _rabbitMqOptions.ConnectionRetryCount,
-                sleepDurationProvider: _ => _rabbitMqOptions.ConnectionRetrySleepDuration,
+                retryCount: _rabbitMqOptions.ConnectionRetryCount!.Value,
+                sleepDurationProvider: _ => _rabbitMqOptions.ConnectionRetrySleepDuration!.Value,
                 onRetry: (exception, timeSpan) =>
                 {
                     _logger.LogError(

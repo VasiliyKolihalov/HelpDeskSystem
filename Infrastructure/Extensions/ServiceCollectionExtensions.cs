@@ -16,11 +16,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection @this,
         IConfigurationSection configurationSection)
     {
-        @this
-            .AddOptions<RabbitMqOptions>()
-            .Bind(configurationSection)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        @this.AddOptionsWithDataAnnotationsValidation<RabbitMqOptions>(configurationSection);
 
         return @this.AddSingleton<ConnectionFactory>(_ =>
         {
@@ -30,8 +26,8 @@ public static class ServiceCollectionExtensions
                 HostName = configuration.Host,
                 UserName = configuration.UserName,
                 Password = configuration.Password,
-                Port = configuration.Port,
-                AutomaticRecoveryEnabled = configuration.AutomaticRecovery
+                Port = configuration.Port!.Value,
+                AutomaticRecoveryEnabled = configuration.AutomaticRecovery!.Value
             };
         }).AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>(_ =>
         {
@@ -48,11 +44,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection @this,
         IConfigurationSection configurationSection)
     {
-        @this
-            .AddOptions<RabbitMqOptions>()
-            .Bind(configurationSection)
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        @this.AddOptionsWithDataAnnotationsValidation<RabbitMqOptions>(configurationSection);
 
         return @this.AddSingleton<ConnectionFactory>(_ =>
         {
@@ -62,13 +54,25 @@ public static class ServiceCollectionExtensions
                 HostName = configuration.Host,
                 UserName = configuration.UserName,
                 Password = configuration.Password,
-                Port = configuration.Port,
-                AutomaticRecoveryEnabled = configuration.AutomaticRecovery
+                Port = configuration.Port!.Value,
+                AutomaticRecoveryEnabled = configuration.AutomaticRecovery!.Value
             };
         }).AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>(_ => new RabbitMqConsumer(
             rabbitMqOptions: _.GetRequiredService<IOptions<RabbitMqOptions>>(),
             connectionFactory: _.GetRequiredService<ConnectionFactory>(),
             logger: _.GetRequiredService<ILogger<RabbitMqConsumer>>()));
+    }
+
+    public static IServiceCollection AddOptionsWithDataAnnotationsValidation<TOptions>(
+        this IServiceCollection @this,
+        IConfigurationSection configurationSection) where TOptions : class
+    {
+        @this.AddOptions<TOptions>()
+            .Bind(configurationSection)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        return @this;
     }
 
     public static IServiceCollection AddFluentMigrationForPostgres(
