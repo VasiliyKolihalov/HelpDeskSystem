@@ -3,7 +3,7 @@ using Authentication.Infrastructure.Attributes;
 
 namespace Authentication.WebApi.Models.Accounts;
 
-public class UserAccountChangePassword
+public class ChangePassword
 {
     [Required] [Password] public string CurrentPassword { get; set; }
     [Required] [Password] public string NewPassword { get; set; }

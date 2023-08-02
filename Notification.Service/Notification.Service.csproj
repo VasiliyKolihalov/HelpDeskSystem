@@ -12,6 +12,7 @@
     <ItemGroup>
       <PackageReference Include="MailKit" Version="4.1.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
+      <PackageReference Include="Scriban" Version="5.7.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -20,6 +21,9 @@
 
     <ItemGroup>
       <None Update="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="Templates\EmailConfirm.html">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>

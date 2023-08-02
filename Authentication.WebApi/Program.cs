@@ -34,8 +34,10 @@ static void ConfigureServices(WebApplicationBuilder builder)
 
     builder.Services
         .AddAutoMapper(typeof(Program))
+        .AddRabbitMqMessagePublisher(builder.Configuration.GetRequiredSection("RabbitMqOptions"))
         .AddTransient<IJwtService, JwtService>()
         .AddTransient<IUsersClient, UsersClient>()
+        .AddTransient<IEmailConfirmCodeProvider, EmailConfirmCodeProvider>()
         .AddTransient<AccountsService>()
         .AddTransient<RolesService>()
         .AddTransient<PermissionsService>()

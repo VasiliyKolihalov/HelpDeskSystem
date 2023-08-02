@@ -3,6 +3,7 @@
 public class Account<TId> where TId : notnull
 {
     public TId Id { get; set; }
+    public bool IsEmailConfirm { get; set; }
     public IEnumerable<Role>? Roles { get; set; }
 
     public IEnumerable<Permission>? Permissions;

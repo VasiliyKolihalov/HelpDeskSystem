@@ -20,6 +20,29 @@ public class UsersClient : IUsersClient
         _logger = logger;
     }
 
+    public async Task<UserView> SendGetRequestAsync(Guid userId)
+    {
+        UserView userView = null!;
+        await Policy
+            .Handle<Exception>()
+            .WaitAndRetryAsync(
+                retryCount: _pollyOptions.RetryCount!.Value,
+                sleepDurationProvider: _ => _pollyOptions.RetrySleepDuration!.Value,
+                onRetry: (exception, timeSpan) =>
+                {
+                    _logger.LogError(
+                        exception: exception,
+                        message: "Error sending user create request. Retrying in {TimeSpan} sec",
+                        args: timeSpan);
+                })
+            .ExecuteAsync(async () =>
+            {
+                userView = (await _httpClient.GetFromJsonAsync<UserView>($"users/{userId}"))!;
+            });
+
+        return userView;
+    }
+
     public async Task<Guid> SendPostRequestAsync(UserCreate userCreate, string jwt)
     {
         _httpClient.DefaultRequestHeaders.AddJwtBearer(jwt);
