@@ -4,6 +4,6 @@ public class EmailConfirmCodeProvider : IEmailConfirmCodeProvider
 {
     public string Generate()
     {
-        return new Random().Next(maxValue: 5).ToString();
+        return new Random().Next(minValue: 10000, maxValue: 99999).ToString();
     }
 }

@@ -20,20 +20,25 @@ public class AccountsService
     private readonly IJwtService _jwtService;
     private readonly IUsersClient _usersClient;
     private readonly IRabbitMqPublisher _rabbitMqPublisher;
-    private readonly IMapper _mapper;
     private readonly IEmailConfirmCodeProvider _emailConfirmCodeProvider;
+    private readonly IMapper _mapper;
 
-    public AccountsService(IAccountsRepository accountsRepository, IRolesRepository rolesRepository,
-        IJwtService jwtService, IUsersClient usersClient, IRabbitMqPublisher rabbitMqPublisher, IMapper mapper,
-        IEmailConfirmCodeProvider emailConfirmCodeProvider)
+    public AccountsService(
+        IAccountsRepository accountsRepository,
+        IRolesRepository rolesRepository,
+        IJwtService jwtService,
+        IUsersClient usersClient,
+        IRabbitMqPublisher rabbitMqPublisher,
+        IEmailConfirmCodeProvider emailConfirmCodeProvider,
+        IMapper mapper)
     {
         _accountsRepository = accountsRepository;
         _rolesRepository = rolesRepository;
         _jwtService = jwtService;
         _usersClient = usersClient;
         _rabbitMqPublisher = rabbitMqPublisher;
-        _mapper = mapper;
         _emailConfirmCodeProvider = emailConfirmCodeProvider;
+        _mapper = mapper;
     }
 
     public async Task<string> RegisterAsync(UserAccountRegister register)
