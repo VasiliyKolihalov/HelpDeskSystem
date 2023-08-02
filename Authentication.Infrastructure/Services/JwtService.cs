@@ -23,9 +23,11 @@ public class JwtService : IJwtService
 
         var claims = new List<Claim>
         {
-            new(CustomJwtClaimTypes.Id, account.Id.ToString()
-                                         ?? throw new InvalidOperationException(
-                                             $"Failed to convert {typeof(TId).Name} to string"))
+            new(
+                type: CustomJwtClaimTypes.Id,
+                value: account.Id.ToString()!),
+
+            new(type: CustomJwtClaimTypes.IsEmailConfirm, value: account.IsEmailConfirm.ToString())
         };
 
         if (account.Roles?.Any() ?? false)

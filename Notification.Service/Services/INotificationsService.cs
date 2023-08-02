@@ -1,6 +1,8 @@
+using NotificationService.Models.Messaging;
+
 namespace NotificationService.Services;
 
 public interface INotificationsService
 {
-    public void Stub();
+    public Task SendConfirmCodeEmailAsync(RequestEmailConfirm requestEmailConfirm);
 }

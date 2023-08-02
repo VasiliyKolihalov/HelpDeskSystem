@@ -15,11 +15,11 @@ public class EmailService : IEmailService
         _emailOptions = emailOptions.Value;
     }
 
-    public async Task SendAsync(string toEmail, string subject, string htmlMessage)
+    public async Task SendAsync(string toEmail, string toName, string subject, string htmlMessage)
     {
         var emailMessage = new MimeMessage();
         emailMessage.From.Add(new MailboxAddress(name: _emailOptions.SenderName, address: _emailOptions.SenderEmail));
-        emailMessage.To.Add(new MailboxAddress(name: string.Empty, address: toEmail));
+        emailMessage.To.Add(new MailboxAddress(name: toName, address: toEmail));
         emailMessage.Subject = subject;
         emailMessage.Body = new TextPart(TextFormat.Html)
         {

@@ -1,4 +1,5 @@
 ﻿using Authentication.Infrastructure.Extensions;
+using Authentication.Infrastructure.Models;
 using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -29,19 +30,40 @@ public class AccountsController : ControllerBase
     {
         return await _accountsService.LoginAsync(userAccountLogin);
     }
+    
+    [HttpPost("email/sendConfirmCode")]
+    [Authorize]
+    public async Task SendEmailConfirmCodeAsync()
+    {
+        await _accountsService.SendEmailConfirmCodeAsync(this.GetAccountIdFromJwt<Guid>());
+    }
+
+    [HttpPut("email/confirm/{confirmCode}")]
+    [Authorize]
+    public async Task ConfirmEmailAsync(string confirmCode)
+    {
+        await _accountsService.ConfirmEmailAsync(confirmCode, this.GetAccountIdFromJwt<Guid>());
+    }
 
     [HttpPut("password/change")]
     [Authorize]
-    public async Task ChangePasswordAsync(UserAccountChangePassword userAccountChangePassword)
+    public async Task ChangePasswordAsync(ChangePassword changePassword)
     {
-        await _accountsService.ChangePasswordAsync(userAccountChangePassword, this.GetAccountFromJwt<Guid>());
+        await _accountsService.ChangePasswordAsync(changePassword, this.GetAccountIdFromJwt<Guid>());
+    }
+
+    [HttpPut("email/change")]
+    [Authorize]
+    public async Task ChangeEmailAsync(ChangeEmail changeEmail)
+    {
+        await _accountsService.ChangeEmailAsync(changeEmail, this.GetAccountIdFromJwt<Guid>());
     }
 
     [HttpDelete]
     [Authorize]
     public async Task DeleteAsync()
     {
-        await _accountsService.DeleteAsync(this.GetAccountFromJwt<Guid>());
+        await _accountsService.DeleteAsync(this.GetAccountIdFromJwt<Guid>());
     }
 
     [HttpPost("{accountId:guid}/roles/{roleId}")]

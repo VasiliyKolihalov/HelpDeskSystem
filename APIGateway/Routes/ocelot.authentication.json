@@ -31,12 +31,26 @@
       "SwaggerKey": "Authentication"
     },
     {
-      "UpstreamPathTemplate": "/gateway/accounts/{accountId}/roles/{roleId}",
+      "UpstreamPathTemplate": "/gateway/email/sendConfirmCode",
       "UpstreamHttpMethod": [
-        "Post",
-        "Delete"
+        "Post"
       ],
-      "DownstreamPathTemplate": "/accounts/{accountId}/roles/{roleId}",
+      "DownstreamPathTemplate": "/accounts/email/sendConfirmCode",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "Authentication"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/email/confirm/{confirmCode}",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/accounts/email/confirm/{confirmCode}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -52,6 +66,37 @@
         "Put"
       ],
       "DownstreamPathTemplate": "/accounts/password/change",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "Authentication"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/accounts/email/change",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/accounts/email/change",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "authentication_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "Authentication"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/accounts/{accountId}/roles/{roleId}",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/accounts/{accountId}/roles/{roleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

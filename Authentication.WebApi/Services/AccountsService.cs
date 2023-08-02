@@ -3,9 +3,11 @@ using Authentication.Infrastructure.Services;
 using Authentication.WebApi.Clients.Users;
 using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Models.Http.Users;
+using Authentication.WebApi.Models.Messaging;
 using Authentication.WebApi.Repositories;
 using AutoMapper;
 using Infrastructure.Exceptions;
+using Infrastructure.Services.Messaging;
 using static Authentication.WebApi.Constants.PermissionNames;
 using BCryptNet = BCrypt.Net.BCrypt;
 
@@ -17,6 +19,8 @@ public class AccountsService
     private readonly IRolesRepository _rolesRepository;
     private readonly IJwtService _jwtService;
     private readonly IUsersClient _usersClient;
+    private readonly IRabbitMqPublisher _rabbitMqPublisher;
+    private readonly IEmailConfirmCodeProvider _emailConfirmCodeProvider;
     private readonly IMapper _mapper;
 
     public AccountsService(
@@ -24,12 +28,16 @@ public class AccountsService
         IRolesRepository rolesRepository,
         IJwtService jwtService,
         IUsersClient usersClient,
+        IRabbitMqPublisher rabbitMqPublisher,
+        IEmailConfirmCodeProvider emailConfirmCodeProvider,
         IMapper mapper)
     {
         _accountsRepository = accountsRepository;
         _rolesRepository = rolesRepository;
         _jwtService = jwtService;
         _usersClient = usersClient;
+        _rabbitMqPublisher = rabbitMqPublisher;
+        _emailConfirmCodeProvider = emailConfirmCodeProvider;
         _mapper = mapper;
     }
 
@@ -48,6 +56,7 @@ public class AccountsService
             }));
 
         userAccount.PasswordHash = BCryptNet.HashPassword(register.Password);
+        userAccount.IsEmailConfirm = false;
         await _accountsRepository.InsertAsync(userAccount);
 
         return _jwtService.GenerateJwt(_mapper.Map<Account<Guid>>(userAccount));
@@ -65,9 +74,64 @@ public class AccountsService
         return _jwtService.GenerateJwt(_mapper.Map<Account<Guid>>(userAccount));
     }
 
-    public async Task ChangePasswordAsync(UserAccountChangePassword changePassword, Account<Guid> account)
+    public async Task SendEmailConfirmCodeAsync(Guid accountId)
     {
-        UserAccount userAccount = (await _accountsRepository.GetByIdAsync(account.Id))!;
+        UserAccount account = (await _accountsRepository.GetByIdAsync(accountId))!;
+
+        if (account.IsEmailConfirm)
+            throw new BadRequestException("Email already confirm");
+
+        if (await _accountsRepository.IsExistsConfirmCodeAsync(accountId))
+            await _accountsRepository.DeleteConfirmCodeAsync(accountId);
+
+        string code = _emailConfirmCodeProvider.Generate();
+        await _accountsRepository.AddConfirmCodeAsync(accountId, code);
+
+        UserView userView = await _usersClient.SendGetRequestAsync(userId: accountId);
+
+        _rabbitMqPublisher.PublishMessage(
+            message: new RequestEmailConfirm
+            {
+                ConfirmCode = code,
+                Email = account.Email,
+                FirstName = userView.FirstName
+            },
+            routingKey: "requested_email_confirm");
+    }
+
+    public async Task ConfirmEmailAsync(string confirmCode, Guid accountId)
+    {
+        UserAccount account = (await _accountsRepository.GetByIdAsync(accountId))!;
+
+        if (account.IsEmailConfirm)
+            throw new BadRequestException("Email already confirm");
+
+        string trueConfirmCode = await _accountsRepository.GetConfirmCodeByIdAsync(accountId)
+                                 ?? throw new BadRequestException("Account didn't request for confirm code");
+
+        if (confirmCode != trueConfirmCode)
+            throw new BadRequestException("Incorrect confirm code");
+
+        account.IsEmailConfirm = true;
+        await _accountsRepository.UpdateAsync(account);
+        await _accountsRepository.DeleteConfirmCodeAsync(account.Id);
+    }
+
+    public async Task ChangeEmailAsync(ChangeEmail changeEmail, Guid accountId)
+    {
+        UserAccount account = (await _accountsRepository.GetByIdAsync(accountId))!;
+
+        if (account.Email == changeEmail.NewEmail)
+            throw new BadRequestException("New email must not be the same as the old");
+
+        account.Email = changeEmail.NewEmail;
+        account.IsEmailConfirm = false;
+        await _accountsRepository.UpdateAsync(account);
+    }
+
+    public async Task ChangePasswordAsync(ChangePassword changePassword, Guid accountId)
+    {
+        UserAccount userAccount = (await _accountsRepository.GetByIdAsync(accountId))!;
 
         if (!BCryptNet.Verify(text: changePassword.CurrentPassword, hash: userAccount.PasswordHash))
             throw new BadRequestException("Incorrect password");
@@ -79,16 +143,16 @@ public class AccountsService
         await _accountsRepository.UpdateAsync(userAccount);
     }
 
-    public async Task DeleteAsync(Account<Guid> account)
+    public async Task DeleteAsync(Guid accountId)
     {
         await _usersClient.SendDeleteRequestAsync(
-            userId: account.Id,
+            userId: accountId,
             jwt: _jwtService.GenerateJwt(new Account<Guid>
             {
                 Permissions = new[] { new Permission { Id = HttpClientPermissions.UsersDelete } }
             }));
 
-        await _accountsRepository.DeleteAsync(account.Id);
+        await _accountsRepository.DeleteAsync(accountId);
     }
 
     public async Task AddToRoleAsync(Guid toAccountId, string roleId)
