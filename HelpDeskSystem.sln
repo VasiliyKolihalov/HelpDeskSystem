@@ -9,8 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{2FC82823-1A1A-446C-840C-843326D5339B}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.WebApi", "Users.WebApi\Users.WebApi.csproj", "{A0A73246-B25F-44C7-B74E-62B47D3A355C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.WebApi", "Authentication.WebApi\Authentication.WebApi.csproj", "{3921292F-3DF6-4B68-866B-399915FB8ACF}"
@@ -18,6 +16,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.Infrastructure", "Authentication.Infrastructure\Authentication.Infrastructure.csproj", "{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.Service", "Notification.Service\Notification.Service.csproj", "{6A366BE4-DF4F-4037-A75B-B6E292546D3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{A9F3AF31-FF29-4210-9DD0-997679061AEB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,10 +33,6 @@ Global
 		{3D423863-7E49-4193-B7F8-51B9817B312B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D423863-7E49-4193-B7F8-51B9817B312B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D423863-7E49-4193-B7F8-51B9817B312B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2FC82823-1A1A-446C-840C-843326D5339B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2FC82823-1A1A-446C-840C-843326D5339B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2FC82823-1A1A-446C-840C-843326D5339B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2FC82823-1A1A-446C-840C-843326D5339B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0A73246-B25F-44C7-B74E-62B47D3A355C}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -53,5 +49,9 @@ Global
 		{6A366BE4-DF4F-4037-A75B-B6E292546D3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A366BE4-DF4F-4037-A75B-B6E292546D3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A366BE4-DF4F-4037-A75B-B6E292546D3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A9F3AF31-FF29-4210-9DD0-997679061AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9F3AF31-FF29-4210-9DD0-997679061AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9F3AF31-FF29-4210-9DD0-997679061AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9F3AF31-FF29-4210-9DD0-997679061AEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
