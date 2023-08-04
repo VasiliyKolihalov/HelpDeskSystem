@@ -7,16 +7,16 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>b551328c-b407-4a18-99cd-00f41e3de2f3</UserSecretsId>
     </PropertyGroup>
+    
+    <ItemGroup>
+        <PackageReference Include="Ocelot" Version="19.0.2"/>
+        <PackageReference Include="MMLib.SwaggerForOcelot" Version="7.0.0"/>
+    </ItemGroup>
 
     <ItemGroup>
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="MMLib.SwaggerForOcelot" Version="7.0.0"/>
-        <PackageReference Include="Ocelot" Version="19.0.2"/>
     </ItemGroup>
 
 </Project>
