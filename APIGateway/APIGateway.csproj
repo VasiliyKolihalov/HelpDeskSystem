@@ -9,14 +9,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MMLib.SwaggerForOcelot" Version="7.0.0" />
-      <PackageReference Include="Ocelot" Version="19.0.2" />
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <PackageReference Include="MMLib.SwaggerForOcelot" Version="7.0.0"/>
+        <PackageReference Include="Ocelot" Version="19.0.2"/>
     </ItemGroup>
 
 </Project>
