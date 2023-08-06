@@ -62,7 +62,15 @@ public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
         {
             byte[] body = eventArgs.Body.ToArray();
             string message = Encoding.UTF8.GetString(body);
-            await consumer.Invoke(message);
+            await consumer.Invoke(message)
+                .ContinueWith(
+                    continuationAction: task =>
+                    {
+                        _logger.LogError(
+                            exception: task.Exception,
+                            message: "Exceptions occurred while consuming the message. Queue: {QueueName}", queueName);
+                    },
+                    continuationOptions: TaskContinuationOptions.OnlyOnFaulted);
         };
 
         string tag = _model.BasicConsume(

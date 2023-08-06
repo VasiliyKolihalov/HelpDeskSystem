@@ -22,8 +22,6 @@ public class NotificationsService : INotificationsService
             confirm_code = requestEmailConfirm.ConfirmCode
         });
         
-        Console.WriteLine(requestEmailConfirm.ConfirmCode);
-        
         await _emailService.SendAsync(
             toEmail: requestEmailConfirm.Email,
             toName: requestEmailConfirm.FirstName,
