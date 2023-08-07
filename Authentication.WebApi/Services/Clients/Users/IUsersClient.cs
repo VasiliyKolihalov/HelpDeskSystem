@@ -1,6 +1,6 @@
 using Authentication.WebApi.Models.Http.Users;
 
-namespace Authentication.WebApi.Clients.Users;
+namespace Authentication.WebApi.Services.Clients.Users;
 
 public interface IUsersClient
 {

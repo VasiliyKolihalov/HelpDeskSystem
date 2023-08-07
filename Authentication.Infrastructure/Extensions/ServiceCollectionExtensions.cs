@@ -1,5 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Authentication.Infrastructure.Models;
+﻿using Authentication.Infrastructure.Models;
+using Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
         IConfigurationSection configurationSection,
         Action<JwtBearerOptions>? options = null)
     {
-        JwtAuthOptions jwtAuthOptions = GetAndValidateJwtAuthOptions(configurationSection);
+        var jwtAuthOptions = configurationSection.GetAndValidate<JwtAuthOptions>();
         @this.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options ?? (_ =>
             {
@@ -30,13 +30,5 @@ public static class ServiceCollectionExtensions
             }));
 
         return @this;
-    }
-
-    private static JwtAuthOptions GetAndValidateJwtAuthOptions(IConfiguration configurationSection)
-    {
-        var jwtAuthOptions = configurationSection.Get<JwtAuthOptions>()!;
-        var context = new ValidationContext(jwtAuthOptions);
-        Validator.ValidateObject(jwtAuthOptions, context, true);
-        return jwtAuthOptions;
     }
 }

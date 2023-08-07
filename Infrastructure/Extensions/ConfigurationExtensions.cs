@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Configuration;
 
 namespace Infrastructure.Extensions;
 
-public static class ConfigurationSectionExtensions
+public static class ConfigurationExtensions
 {
     public static string GetRequiredConnectionString(this IConfiguration @this, string name)
     {
@@ -14,5 +15,14 @@ public static class ConfigurationSectionExtensions
     {
         return @this.GetValue<T>(key)
                ?? throw new InvalidOperationException($"Value with key {key} not found in configuration");
+    }
+
+    public static T GetAndValidate<T>(this IConfiguration @this)
+    {
+        T value = @this.Get<T>()
+                  ?? throw new InvalidOperationException($"{typeof(T).Name} not found in configuration");
+        var context = new ValidationContext(value);
+        Validator.ValidateObject(value, context, validateAllProperties: true);
+        return value;
     }
 }
