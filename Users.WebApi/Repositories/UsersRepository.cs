@@ -1,81 +1,50 @@
-﻿using System.Data.Common;
-using Dapper.Transaction;
-using Infrastructure.Extensions;
-using Infrastructure.Services.Persistence;
+﻿using Microsoft.EntityFrameworkCore;
 using Users.WebApi.Models.Users;
 
 namespace Users.WebApi.Repositories;
 
 public class UsersRepository : IUsersRepository
 {
-    private readonly IDbContext _dbContext;
+    private readonly ApplicationContext _applicationContext;
 
-    public UsersRepository(IDbContext dbContext)
+    public UsersRepository(ApplicationContext applicationContext)
     {
-        _dbContext = dbContext;
+        _applicationContext = applicationContext;
     }
 
     public async Task<IEnumerable<User>> GetAllAsync()
     {
-        const string query = "select * from users";
-        IEnumerable<User> users = null!;
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            users = await transaction.QueryAsync<User>(query);
-        });
-        return users;
+        return await _applicationContext.Users.ToListAsync();
     }
 
     public async Task<User?> GetByIdAsync(Guid id)
     {
-        const string query = "select * from users where id = @id";
-        User? user = null;
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            user = await transaction.QueryFirstOrDefaultAsync<User>(query, param: new { id });
-        });
+        User? user = await _applicationContext.Users.FirstOrDefaultAsync(_ => _.Id == id);
         return user;
     }
 
     public async Task<bool> IsExistsAsync(Guid id)
     {
-        const string query = "select exists(select * from Users where Id = @id)";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        var exists = false;
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            exists = await transaction.QuerySingleAsync<bool>(query, new { id });
-        });
-        return exists;
+        return await _applicationContext.Users.AnyAsync(_ => _.Id == id);
     }
 
     public async Task InsertAsync(User item)
     {
-        const string query = "insert into users values (@Id, @FirstName, @LastName, @Email)";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(query, item));
+        await _applicationContext.Users.AddAsync(item);
+        await _applicationContext.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(User item)
     {
-        const string query = @"update users set 
-                            firstName = @FirstName, 
-                            lastName = @LastName, 
-                            email = @Email 
-                            where id = @Id";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(query, item));
+        _applicationContext.Users.Update(item);
+        await _applicationContext.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(Guid id)
     {
-        const string query = "delete from users where id = @id";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            await transaction.ExecuteAsync(query, param: new { id });
-        });
+        var user = new User { Id = id };
+        _applicationContext.Users.Attach(user);
+        _applicationContext.Users.Remove(user);
+        await _applicationContext.SaveChangesAsync();
     }
 }

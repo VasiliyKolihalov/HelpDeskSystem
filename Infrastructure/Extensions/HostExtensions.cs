@@ -2,6 +2,7 @@
 using Dapper;
 using FluentMigrator.Runner;
 using Infrastructure.Services.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -54,4 +55,12 @@ public static class HostExtensions
             }
         }
     }
+
+    public static IHost TriggerEntityFrameworkMigrations<T>(this IHost @this) where T : DbContext
+    {
+        using IServiceScope scope = @this.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<T>();
+        return @this;
+    }
+
 }
