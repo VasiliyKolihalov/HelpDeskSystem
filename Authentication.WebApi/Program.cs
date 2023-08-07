@@ -2,13 +2,12 @@ using System.Reflection;
 using Authentication.Infrastructure.Extensions;
 using Authentication.Infrastructure.Models;
 using Authentication.Infrastructure.Services;
-using Authentication.WebApi.Clients.Users;
 using Authentication.WebApi.Constants;
 using Authentication.WebApi.Repositories;
 using Authentication.WebApi.Services;
+using Authentication.WebApi.Services.Clients.Users;
 using Infrastructure.Extensions;
 using Infrastructure.Middlewares;
-using Infrastructure.Models;
 using Infrastructure.Services.Persistence;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -29,9 +28,6 @@ static void ConfigureServices(WebApplicationBuilder builder)
         .AddTransient<IRolesRepository, RolesRepository>()
         .AddTransient<IPermissionsRepository, PermissionsRepository>();
 
-    builder.Services.AddOptionsWithDataAnnotationsValidation<PollyOptions>(
-        builder.Configuration.GetRequiredSection("PollyOptions"));
-
     builder.Services
         .AddAutoMapper(typeof(Program))
         .AddRabbitMqMessagePublisher(builder.Configuration.GetRequiredSection("RabbitMqOptions"))
@@ -46,10 +42,9 @@ static void ConfigureServices(WebApplicationBuilder builder)
             configureClient: client =>
             {
                 client.BaseAddress = new Uri(
-                    builder.Configuration
-                        .GetRequiredSection("HttpUrls")
-                        .GetRequiredValue<string>("Users.WebApi"));
-            });
+                    builder.Configuration.GetRequiredValue<string>("HttpUrls:Users.WebApi"));
+            })
+        .AddDefaultRetryPollyHandler(builder.Configuration.GetRequiredSection("PollyOptions"));
 
 
     IConfigurationSection jwtAuthSection = builder.Configuration.GetRequiredSection("JwtAuthOptions");

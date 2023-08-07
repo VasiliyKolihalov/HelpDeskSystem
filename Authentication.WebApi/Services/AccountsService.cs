@@ -1,10 +1,10 @@
 ﻿using Authentication.Infrastructure.Models;
 using Authentication.Infrastructure.Services;
-using Authentication.WebApi.Clients.Users;
 using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Models.Http.Users;
 using Authentication.WebApi.Models.Messaging;
 using Authentication.WebApi.Repositories;
+using Authentication.WebApi.Services.Clients.Users;
 using AutoMapper;
 using Infrastructure.Exceptions;
 using Infrastructure.Services.Messaging;

@@ -18,26 +18,28 @@ public static class ServiceCollectionExtensions
     {
         @this.AddOptionsWithDataAnnotationsValidation<RabbitMqOptions>(configurationSection);
 
-        return @this.AddSingleton<ConnectionFactory>(_ =>
-        {
-            var configuration = _.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
-            return new ConnectionFactory
+        return @this
+            .AddSingleton<ConnectionFactory>(_ =>
             {
-                HostName = configuration.Host,
-                UserName = configuration.UserName,
-                Password = configuration.Password,
-                Port = configuration.Port!.Value,
-                AutomaticRecoveryEnabled = configuration.AutomaticRecovery!.Value
-            };
-        }).AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>(_ =>
-        {
-            var publisher = new RabbitMqPublisher(
-                rabbitMqOptions: _.GetRequiredService<IOptions<RabbitMqOptions>>(),
-                connectionFactory: _.GetRequiredService<ConnectionFactory>(),
-                logger: _.GetRequiredService<ILogger<RabbitMqPublisher>>());
-            publisher.Connect();
-            return publisher;
-        });
+                var configuration = _.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+                return new ConnectionFactory
+                {
+                    HostName = configuration.Host,
+                    UserName = configuration.UserName,
+                    Password = configuration.Password,
+                    Port = configuration.Port!.Value,
+                    AutomaticRecoveryEnabled = configuration.AutomaticRecovery!.Value
+                };
+            })
+            .AddSingleton<IRabbitMqPublisher, RabbitMqPublisher>(_ =>
+            {
+                var publisher = new RabbitMqPublisher(
+                    rabbitMqOptions: _.GetRequiredService<IOptions<RabbitMqOptions>>(),
+                    connectionFactory: _.GetRequiredService<ConnectionFactory>(),
+                    logger: _.GetRequiredService<ILogger<RabbitMqPublisher>>());
+                publisher.Connect();
+                return publisher;
+            });
     }
 
     public static IServiceCollection AddRabbitMqMessageConsumer(
@@ -46,21 +48,23 @@ public static class ServiceCollectionExtensions
     {
         @this.AddOptionsWithDataAnnotationsValidation<RabbitMqOptions>(configurationSection);
 
-        return @this.AddSingleton<ConnectionFactory>(_ =>
-        {
-            var configuration = _.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
-            return new ConnectionFactory
+        return @this
+            .AddSingleton<ConnectionFactory>(_ =>
             {
-                HostName = configuration.Host,
-                UserName = configuration.UserName,
-                Password = configuration.Password,
-                Port = configuration.Port!.Value,
-                AutomaticRecoveryEnabled = configuration.AutomaticRecovery!.Value
-            };
-        }).AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>(_ => new RabbitMqConsumer(
-            rabbitMqOptions: _.GetRequiredService<IOptions<RabbitMqOptions>>(),
-            connectionFactory: _.GetRequiredService<ConnectionFactory>(),
-            logger: _.GetRequiredService<ILogger<RabbitMqConsumer>>()));
+                var configuration = _.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+                return new ConnectionFactory
+                {
+                    HostName = configuration.Host,
+                    UserName = configuration.UserName,
+                    Password = configuration.Password,
+                    Port = configuration.Port!.Value,
+                    AutomaticRecoveryEnabled = configuration.AutomaticRecovery!.Value
+                };
+            })
+            .AddSingleton<IRabbitMqConsumer, RabbitMqConsumer>(_ => new RabbitMqConsumer(
+                rabbitMqOptions: _.GetRequiredService<IOptions<RabbitMqOptions>>(),
+                connectionFactory: _.GetRequiredService<ConnectionFactory>(),
+                logger: _.GetRequiredService<ILogger<RabbitMqConsumer>>()));
     }
 
     public static IServiceCollection AddOptionsWithDataAnnotationsValidation<TOptions>(
