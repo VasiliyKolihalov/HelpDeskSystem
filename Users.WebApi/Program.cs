@@ -1,8 +1,7 @@
-﻿using System.Reflection;
-using Authentication.Infrastructure.Extensions;
+﻿using Authentication.Infrastructure.Extensions;
 using Infrastructure.Extensions;
 using Infrastructure.Middlewares;
-using Infrastructure.Services.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Users.WebApi.Constants;
 using Users.WebApi.Repositories;
 using Users.WebApi.Services;
@@ -10,17 +9,15 @@ using Users.WebApi.Services;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 ConfigureServices(builder);
 WebApplication app = builder.Build();
-await ConfigureMiddlewaresAsync(app);
+app.TriggerEntityFrameworkMigrations<ApplicationContext>();
+ConfigureMiddlewares(app);
 app.Run();
 
 static void ConfigureServices(WebApplicationBuilder builder)
 {
     string connectionString = builder.Configuration.GetRequiredConnectionString("Default");
     builder.Services
-        .AddSingleton<IDbContext, PostgresContext>(_ => new PostgresContext(
-            connectionString: connectionString,
-            masterConnectionString: builder.Configuration.GetRequiredConnectionString("Master")))
-        .AddFluentMigrationForPostgres(connectionString, Assembly.GetExecutingAssembly())
+        .AddDbContext<ApplicationContext>(options => options.UseNpgsql(connectionString))
         .AddTransient<IUsersRepository, UsersRepository>();
 
     builder.Services
@@ -40,10 +37,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
 }
 
 
-static async Task ConfigureMiddlewaresAsync(WebApplication app)
+static void ConfigureMiddlewares(WebApplication app)
 {
-    await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("UsersDb"));
-
     app.UseHttpLogging();
 
     if (app.Environment.IsDevelopment())

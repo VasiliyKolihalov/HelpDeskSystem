@@ -10,10 +10,9 @@ using SupportTickets.WebApi.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 ConfigureServices(builder);
-
 WebApplication app = builder.Build();
-await ConfigureMiddlewaresAsync(app);
-
+await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("SupportTicketsDb")); 
+ConfigureMiddlewares(app);
 app.Run();
 
 static void ConfigureServices(WebApplicationBuilder builder)
@@ -45,10 +44,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
         .AddControllers();
 }
 
-static async Task ConfigureMiddlewaresAsync(WebApplication app)
+static void ConfigureMiddlewares(WebApplication app)
 {
-    await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("SupportTicketsDb"));
-
     app.UseHttpLogging();
 
     if (app.Environment.IsDevelopment())
