@@ -5,11 +5,13 @@ public static class PermissionNames
     public static class AccountPermissions
     {
         private const string Account = "accounts";
+        public const string GetById = Account + ".getbyid";
         public const string AddRole = Account + ".addtorole";
         public const string RemoveRole = Account + ".removefromrole";
 
-        public static readonly IEnumerable<string> PermissionsForPolicy = new[]
+        public static readonly IEnumerable<string> PolicyPermissions = new[]
         {
+            GetById,
             AddRole,
             RemoveRole
         };
@@ -22,7 +24,7 @@ public static class PermissionNames
         public const string Update = Roles + ".update";
         public const string Delete = Roles + ".delete";
 
-        public static readonly IEnumerable<string> PermissionsForPolicy = new[]
+        public static readonly IEnumerable<string> PolicyPermissions = new[]
         {
             Create,
             Update,
@@ -36,7 +38,7 @@ public static class PermissionNames
         public const string UsersDelete = "users.delete";
     }
 
-    public static readonly IEnumerable<string> AllPermissionsForPolicy =
-        AccountPermissions.PermissionsForPolicy
-            .Concat(RolePermissions.PermissionsForPolicy);
+    public static readonly IEnumerable<string> AllPolicyPermissions =
+        AccountPermissions.PolicyPermissions
+            .Concat(RolePermissions.PolicyPermissions);
 }

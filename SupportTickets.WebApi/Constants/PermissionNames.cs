@@ -10,11 +10,19 @@ public static class PermissionNames
         public const string Update = SupportTicket + ".update";
         public const string Delete = SupportTicket + ".delete";
 
-        public static readonly IEnumerable<string> PermissionsForPolicy = new[]
+        private const string Agents = "agents";
+        public const string SetAgent = SupportTicket + "." + Agents + ".set";
+
+        public static readonly IEnumerable<string> PolicyPermissions = new[]
         {
-            GetAll
+            GetAll, SetAgent
         };
     }
 
-    public static readonly IEnumerable<string> AllPermissionsForPolicy = SupportTicketPermissions.PermissionsForPolicy;
+    public static class HttpClientPermissions
+    {
+        public const string AccountsGetById = "accounts.getbyid";
+    }
+
+    public static readonly IEnumerable<string> AllPolicyPermissions = SupportTicketPermissions.PolicyPermissions;
 }

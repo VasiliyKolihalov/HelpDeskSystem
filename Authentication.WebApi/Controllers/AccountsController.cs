@@ -19,6 +19,13 @@ public class AccountsController : ControllerBase
         _accountsService = accountsService;
     }
 
+    [HttpGet("{accountId:guid}")]
+    [Authorize(Policy = AccountPermissions.GetById)]
+    public async Task<Account<Guid>> GetAsync(Guid accountId)
+    {
+        return await _accountsService.GetByIdAsync(accountId);
+    }
+
     [HttpPost("register")]
     public async Task<string> RegisterAsync(UserAccountRegister userAccountRegister)
     {
@@ -30,7 +37,7 @@ public class AccountsController : ControllerBase
     {
         return await _accountsService.LoginAsync(userAccountLogin);
     }
-    
+
     [HttpPost("email/sendConfirmCode")]
     [Authorize]
     public async Task SendEmailConfirmCodeAsync()

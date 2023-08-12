@@ -5,6 +5,6 @@ namespace Authentication.WebApi.Services.Clients.Users;
 public interface IUsersClient
 {
     public Task<UserView> SendGetRequestAsync(Guid userId);
-    public Task<Guid> SendPostRequestAsync(UserCreate userCreate, string jwt);
-    public Task SendDeleteRequestAsync(Guid userId, string jwt);
+    public Task<Guid> SendPostRequestAsync(UserCreate userCreate);
+    public Task SendDeleteRequestAsync(Guid userId);
 }

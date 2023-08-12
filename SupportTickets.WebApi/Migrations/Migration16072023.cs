@@ -3,7 +3,7 @@ using FluentMigrator;
 
 namespace SupportTickets.WebApi.Migrations;
 
-[Migration(16072023)]
+[Migration(20230716)]
 public class Migration16072023 : Migration
 {
     public override void Up()
@@ -17,7 +17,8 @@ public class Migration16072023 : Migration
         Create.Table("SupportTickets")
             .WithColumn("Id").AsGuid().PrimaryKey()
             .WithColumn("Description").AsString(500).NotNullable()
-            .WithColumn("UserId").AsGuid().ForeignKey("Users", "Id").OnDeleteOrUpdate(Rule.Cascade);
+            .WithColumn("UserId").AsGuid().NotNullable()
+            .ForeignKey("Users", "Id").OnDeleteOrUpdate(Rule.Cascade);
     }
 
     public override void Down()

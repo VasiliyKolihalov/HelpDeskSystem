@@ -41,6 +41,14 @@ public class AccountsService
         _mapper = mapper;
     }
 
+    public async Task<Account<Guid>> GetByIdAsync(Guid accountId)
+    {
+        UserAccount userAccount = await _accountsRepository.GetByIdAsync(accountId)
+                                  ?? throw new NotFoundException($"Account with id {accountId} not found");
+
+        return _mapper.Map<Account<Guid>>(userAccount);
+    }
+
     public async Task<string> RegisterAsync(UserAccountRegister register)
     {
         if (await _accountsRepository.IsExistsAsync(register.Email))
@@ -48,12 +56,7 @@ public class AccountsService
 
         var userAccount = _mapper.Map<UserAccount>(register);
 
-        userAccount.Id = await _usersClient.SendPostRequestAsync(
-            userCreate: _mapper.Map<UserCreate>(register),
-            jwt: _jwtService.GenerateJwt(new Account<Guid>
-            {
-                Permissions = new[] { new Permission { Id = HttpClientPermissions.UsersCreate } }
-            }));
+        userAccount.Id = await _usersClient.SendPostRequestAsync(_mapper.Map<UserCreate>(register));
 
         userAccount.PasswordHash = BCryptNet.HashPassword(register.Password);
         userAccount.IsEmailConfirm = false;
@@ -96,7 +99,7 @@ public class AccountsService
                 Email = account.Email,
                 FirstName = userView.FirstName
             },
-            routingKey: "requested_email_confirm");
+            routingKey: "notifications.requested_email_confirm");
     }
 
     public async Task ConfirmEmailAsync(string confirmCode, Guid accountId)
@@ -145,13 +148,7 @@ public class AccountsService
 
     public async Task DeleteAsync(Guid accountId)
     {
-        await _usersClient.SendDeleteRequestAsync(
-            userId: accountId,
-            jwt: _jwtService.GenerateJwt(new Account<Guid>
-            {
-                Permissions = new[] { new Permission { Id = HttpClientPermissions.UsersDelete } }
-            }));
-
+        await _usersClient.SendDeleteRequestAsync(accountId);
         await _accountsRepository.DeleteAsync(accountId);
     }
 

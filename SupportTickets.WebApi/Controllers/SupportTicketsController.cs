@@ -1,6 +1,9 @@
-﻿using Authentication.Infrastructure.Extensions;
+﻿using Authentication.Infrastructure.Constants;
+using Authentication.Infrastructure.Extensions;
+using Authentication.Infrastructure.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Services;
 using static SupportTickets.WebApi.Constants.PermissionNames;
@@ -26,6 +29,12 @@ public class SupportTicketsController : ControllerBase
         return await _supportTicketsService.GetAllAsync();
     }
 
+    [HttpGet("my")]
+    public async Task<IEnumerable<SupportTicketPreview>> GetBasedOnAccountAsync()
+    {
+        return await _supportTicketsService.GetBasedOnAccountIdAsync(this.GetAccountIdFromJwt<Guid>());
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<SupportTicketView> GetAsync(Guid id)
     {
@@ -33,6 +42,7 @@ public class SupportTicketsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AccountPolicyNames.EmailConfirm)]
     public async Task<Guid> PostAsync(SupportTicketCreate supportTicketCreate)
     {
         return await _supportTicketsService.CreateAsync(supportTicketCreate, this.GetAccountFromJwt<Guid>());
@@ -45,8 +55,42 @@ public class SupportTicketsController : ControllerBase
     }
 
     [HttpDelete]
+    [Authorize(Policy = SupportTicketPermissions.Delete)]
     public async Task DeleteAsync(Guid id)
     {
-        await _supportTicketsService.DeleteAsync(id, this.GetAccountFromJwt<Guid>());
+        await _supportTicketsService.DeleteAsync(id);
     }
+
+    #region Agents
+
+    [HttpPost("{supportTicketId:guid}/agent/{userId:guid}")]
+    [Authorize(Policy = SupportTicketPermissions.SetAgent)]
+    public async Task SetAgentAsync(Guid supportTicketId, Guid userId)
+    {
+        await _supportTicketsService.SetAgentAsync(supportTicketId, userId);
+    }
+
+    #endregion
+
+    #region Messages
+
+    [HttpPost("messages")]
+    public async Task<Guid> AddMessageAsync(MessageCreate messageCreate)
+    {
+        return await _supportTicketsService.AddMessageAsync(messageCreate, this.GetAccountFromJwt<Guid>());
+    }
+
+    [HttpPut("messages")]
+    public async Task UpdateMessageAsync(MessageUpdate messageUpdate)
+    {
+        await _supportTicketsService.UpdateMessageAsync(messageUpdate, this.GetAccountIdFromJwt<Guid>());
+    }
+
+    [HttpDelete("messages/{messageId:guid}")]
+    public async Task DeleteMessageAsync(Guid messageId)
+    {
+        await _supportTicketsService.DeleteMessageAsync(messageId, this.GetAccountIdFromJwt<Guid>());
+    }
+
+    #endregion
 }
