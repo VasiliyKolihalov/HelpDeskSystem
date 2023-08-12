@@ -15,9 +15,21 @@ public class UsersRepository : IUsersRepository
         _dbContext = dbContext;
     }
 
+    public async Task<IEnumerable<User>> GetAllAsync()
+    {
+        const string query = "select * from Users";
+        IEnumerable<User> users = null!;
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            users = await transaction.QueryAsync<User>(query);
+        });
+        return users;
+    }
+
     public async Task<User?> GetByIdAsync(Guid id)
     {
-        const string query = "select * from users where id = @id";
+        const string query = "select * from Users where Id = @id";
         User? user = null;
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
@@ -27,16 +39,28 @@ public class UsersRepository : IUsersRepository
         return user;
     }
 
+    public async Task<bool> IsExistsAsync(Guid id)
+    {
+        const string query = "select exists(select * from Users where Id = @id)";
+        await using DbConnection connection = _dbContext.CreateConnection();
+        var exists = false;
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            exists = await transaction.QuerySingleAsync<bool>(query, new { id });
+        });
+        return exists;
+    }
+
     public async Task InsertAsync(User user)
     {
-        const string query = "insert into users values (@Id, @FirstName, @LastName)";
+        const string query = "insert into Users values (@Id, @FirstName, @LastName)";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(query, user));
     }
 
     public async Task UpdateAsync(User user)
     {
-        const string query = "update users set firstname = @FirstName, lastName = @LastName where id = @Id";
+        const string query = "update Users set Firstname = @FirstName, LastName = @LastName where Id = @Id";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
@@ -46,7 +70,7 @@ public class UsersRepository : IUsersRepository
 
     public async Task DeleteAsync(Guid id)
     {
-        const string query = "delete from users where id = @id";
+        const string query = "delete from Users where Id = @id";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {

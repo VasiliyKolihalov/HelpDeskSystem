@@ -23,7 +23,7 @@ public class RabbitMqWorker : IHostedService
     {
         _rabbitMqConsumer.Start(new Dictionary<string, Func<string, Task>>
         {
-            ["requested_email_confirm"] = HandleEmailConfirm
+            ["notifications.requested_email_confirm"] = HandleEmailConfirm
         });
         await Task.CompletedTask;
     }

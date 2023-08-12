@@ -54,7 +54,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services
         .AddJwtAuthentication(jwtAuthSection)
         .AddAuthorization(options => options
-            .AddPolicyBasedOnJwtPermissions(PermissionNames.AllPermissionsForPolicy));
+            .AddPoliticiansBasedOnJwtPermissions(PermissionNames.AllPolicyPermissions));
 
     builder.Services
         .AddEndpointsApiExplorer()
