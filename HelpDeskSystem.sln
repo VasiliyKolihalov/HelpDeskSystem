@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.Service", "Not
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{A9F3AF31-FF29-4210-9DD0-997679061AEB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportTickets.Tests", "SupportTickets.Tests\SupportTickets.Tests.csproj", "{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,5 +55,9 @@ Global
 		{A9F3AF31-FF29-4210-9DD0-997679061AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A9F3AF31-FF29-4210-9DD0-997679061AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A9F3AF31-FF29-4210-9DD0-997679061AEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -20,9 +20,9 @@ public class SupportTicketsService
     private readonly IMapper _mapper;
 
     public SupportTicketsService(
-        ISupportTicketsRepository supportTicketsRepository, 
+        ISupportTicketsRepository supportTicketsRepository,
         IUsersRepository usersRepository,
-        IAccountsClient accountsClient, 
+        IAccountsClient accountsClient,
         IMapper mapper)
     {
         _supportTicketsRepository = supportTicketsRepository;
@@ -104,7 +104,7 @@ public class SupportTicketsService
         if (!await _usersRepository.IsExistsAsync(userId))
             throw new NotFoundException($"User with id: {userId} not found");
 
-        Account<Guid> userAccount = await _accountsClient.SendGetRequestAsync(accountId:userId);
+        Account<Guid> userAccount = await _accountsClient.SendGetRequestAsync(accountId: userId);
 
         if (!userAccount.HasRole(RoleNames.Agent))
             throw new BadRequestException("User are not agent");
