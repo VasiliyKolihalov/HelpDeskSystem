@@ -32,6 +32,82 @@
         }
       ],
       "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/my",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/my",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/close",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/close",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{supportTicketId}/agent/{userId}/set",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{supportTicketId}/agent/{userId}/set",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/messages",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/messages",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/messages/{id}",
+      "UpstreamHttpMethod": [
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/messages/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
     }
   ]
 }

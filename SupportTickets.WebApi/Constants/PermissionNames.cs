@@ -9,6 +9,7 @@ public static class PermissionNames
         public const string GetById = SupportTicket + ".getbyid";
         public const string Update = SupportTicket + ".update";
         public const string Delete = SupportTicket + ".delete";
+        public const string Close = SupportTicket + ".close";
 
         private const string Agents = "agents";
         public const string SetAgent = SupportTicket + "." + Agents + ".set";

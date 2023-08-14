@@ -61,9 +61,17 @@ public class SupportTicketsController : ControllerBase
         await _supportTicketsService.DeleteAsync(id);
     }
 
+
+    [HttpPost("{supportTicketId:guid}/close")]
+    public async Task CloseAsync(Guid supportTicketId)
+    {
+        await _supportTicketsService.CloseAsync(supportTicketId, this.GetAccountFromJwt<Guid>());
+    }
+
+
     #region Agents
 
-    [HttpPost("{supportTicketId:guid}/agent/{userId:guid}")]
+    [HttpPost("{supportTicketId:guid}/agent/{userId:guid}/set")]
     [Authorize(Policy = SupportTicketPermissions.SetAgent)]
     public async Task SetAgentAsync(Guid supportTicketId, Guid userId)
     {

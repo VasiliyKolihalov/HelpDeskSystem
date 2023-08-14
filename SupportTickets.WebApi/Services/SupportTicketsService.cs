@@ -79,6 +79,9 @@ public class SupportTicketsService
                                       ?? throw new NotFoundException(
                                           $"SupportTicket with id: {supportTicketUpdate.Id} not found");
 
+        if (supportTicket.IsClose)
+            throw new BadRequestException($"SupportTicket with id: {supportTicketUpdate.Id} close");
+
         if (supportTicket.User.Id != account.Id && !account.HasPermission(Update))
             throw new UnauthorizedException();
 
@@ -95,11 +98,30 @@ public class SupportTicketsService
         await _supportTicketsRepository.DeleteAsync(id);
     }
 
+    public async Task CloseAsync(Guid supportTicketId, Account<Guid> account)
+    {
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
+                                      ?? throw new NotFoundException(
+                                          $"SupportTicket with id: {supportTicketId} not found");
+
+        if (supportTicket.IsClose)
+            throw new BadRequestException($"SupportTicket with id: {supportTicketId} close");
+
+        if (supportTicket.Agent?.Id != account.Id && !account.HasPermission(Close))
+            throw new UnauthorizedException();
+
+        supportTicket.IsClose = true;
+        await _supportTicketsRepository.UpdateAsync(supportTicket);
+    }
+
     public async Task SetAgentAsync(Guid supportTicketId, Guid userId)
     {
         SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
                                       ?? throw new NotFoundException(
                                           $"SupportTicket with id: {supportTicketId} not found");
+
+        if (supportTicket.IsClose)
+            throw new BadRequestException($"SupportTicket with id: {supportTicketId} close");
 
         if (!await _usersRepository.IsExistsAsync(userId))
             throw new NotFoundException($"User with id: {userId} not found");
@@ -119,6 +141,9 @@ public class SupportTicketsService
                                       ?? throw new NotFoundException(
                                           $"SupportTicket with id: {messageCreate.SupportTicketId} not found");
 
+        if (supportTicket.IsClose)
+            throw new BadRequestException($"SupportTicket with id: {messageCreate.SupportTicketId} close");
+
         if (!IsAccountRelatedToSupportTicket(supportTicket, account.Id))
             throw new UnauthorizedException();
 
@@ -135,6 +160,11 @@ public class SupportTicketsService
         Message message = await _supportTicketsRepository.GetMessageByIdAsync(messageUpdate.Id)
                           ?? throw new NotFoundException($"Message with id: {messageUpdate.Id} not found");
 
+        SupportTicket supportTicket = (await _supportTicketsRepository.GetByIdAsync(message.SupportTicketId))!;
+
+        if (supportTicket.IsClose)
+            throw new BadRequestException($"SupportTicket with id: {supportTicket.Id} close");
+
         if (message.User.Id != accountId)
             throw new UnauthorizedException();
 
@@ -145,6 +175,11 @@ public class SupportTicketsService
     {
         Message message = await _supportTicketsRepository.GetMessageByIdAsync(messageId)
                           ?? throw new NotFoundException($"Message with id: {messageId} not found");
+
+        SupportTicket supportTicket = (await _supportTicketsRepository.GetByIdAsync(message.SupportTicketId))!;
+
+        if (supportTicket.IsClose)
+            throw new BadRequestException($"SupportTicket with id: {supportTicket.Id} close");
 
         if (message.User.Id != accountId)
             throw new UnauthorizedException();

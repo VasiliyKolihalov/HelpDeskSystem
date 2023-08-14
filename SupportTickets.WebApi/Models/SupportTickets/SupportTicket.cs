@@ -7,6 +7,7 @@ public class SupportTicket
 {
     public Guid Id { get; set; }
     public string Description { get; set; }
+    public bool IsClose { get; set; }
     public User User { get; set; }
     public User? Agent { get; set; }
     
