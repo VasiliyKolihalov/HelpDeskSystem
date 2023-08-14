@@ -26,3 +26,7 @@ jobs:
 
       - name: Build solutions
         run: dotnet build --no-restore --configuration Release
+
+      - name: Run unit tests
+        run:
+          dotnet test --no-build --verbosity normal --configuration Release --collect:"XPlat Code Coverage" --results-directory coverage SupportTickets.Tests
