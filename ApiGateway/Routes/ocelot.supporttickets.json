@@ -64,11 +64,11 @@
       "SwaggerKey": "SupportTickets"
     },
     {
-      "UpstreamPathTemplate": "/gateway/supporttickets/{supportTicketId}/agent/{userId}/set",
+      "UpstreamPathTemplate": "/gateway/supporttickets/{supportTicketId}/agent/set/{userId}",
       "UpstreamHttpMethod": [
         "Post"
       ],
-      "DownstreamPathTemplate": "/supporttickets/{supportTicketId}/agent/{userId}/set",
+      "DownstreamPathTemplate": "/supporttickets/{supportTicketId}/agent/set/{userId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -95,11 +95,11 @@
       "SwaggerKey": "SupportTickets"
     },
     {
-      "UpstreamPathTemplate": "/gateway/supporttickets/messages/{id}",
+      "UpstreamPathTemplate": "/gateway/supporttickets/messages/{messageId}",
       "UpstreamHttpMethod": [
         "Delete"
       ],
-      "DownstreamPathTemplate": "/supporttickets/messages/{id}",
+      "DownstreamPathTemplate": "/supporttickets/messages/{messageId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
