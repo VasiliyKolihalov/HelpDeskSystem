@@ -9,12 +9,13 @@ public class Migration11082023 : Migration
     {
         Insert
             .IntoTable("Permissions")
-            .Row(new {Id = "accounts.getbyid"})
+            .Row(new { Id = "accounts.getbyid" })
             .Row(new { Id = "supporttickets.agents.set" });
 
         Insert
             .IntoTable("RolesPermissions")
-            .Row(new { RoleId = "admin", PermissionId = "supporttickets.agents.set" });
+            .Row(new { RoleId = "admin", PermissionId = "supporttickets.agents.set" })
+            .Row(new { RoleId = "admin", PermissionId = "accounts.getbyid" });
 
         Insert
             .IntoTable("Roles")
@@ -25,7 +26,8 @@ public class Migration11082023 : Migration
     {
         Delete
             .FromTable("RolesPermissions")
-            .Row(new { RoleId = "admin", PermissionId = "supporttickets.agents.set" });
+            .Row(new { RoleId = "admin", PermissionId = "supporttickets.agents.set" })
+            .Row(new { RoleId = "admin", PermissionId = "accounts.getbyid" });
 
         Delete
             .FromTable("Permissions")

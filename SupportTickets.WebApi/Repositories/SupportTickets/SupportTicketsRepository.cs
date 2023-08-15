@@ -101,11 +101,15 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task UpdateAsync(SupportTicket item)
     {
-        const string query = "update SupportTickets set Description = @Description, AgentId = @AgentId where Id = @Id";
+        const string query = @"update SupportTickets set 
+                               Description = @Description, 
+                               IsCLose = @IsCLose,
+                               AgentId = @AgentId
+                               where Id = @Id";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(
             sql: query,
-            param: new { item.Id, item.Description, AgentId = item.Agent?.Id }));
+            param: new { item.Id, item.Description, item.IsClose, AgentId = item.Agent?.Id }));
     }
 
     public async Task DeleteAsync(Guid id)

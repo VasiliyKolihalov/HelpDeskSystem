@@ -10,9 +10,8 @@ public class Migration10082023 : Migration
     {
         Alter
             .Table("SupportTickets")
-            .AddColumn("AgentId").AsGuid()
-            .ForeignKey("Users", "Id")
-            .SetExistingRowsTo(null);
+            .AddColumn("AgentId").AsGuid().WithDefaultValue(null)
+            .ForeignKey("Users", "Id");
 
         Create.Table("Messages")
             .WithColumn("Id").AsGuid().PrimaryKey()
