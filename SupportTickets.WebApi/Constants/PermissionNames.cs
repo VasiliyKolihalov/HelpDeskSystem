@@ -12,11 +12,11 @@ public static class PermissionNames
         public const string Close = SupportTicket + ".close";
 
         private const string Agents = "agents";
-        public const string SetAgent = SupportTicket + "." + Agents + ".set";
+        public const string AppointAgent = SupportTicket + "." + Agents + ".appoint";
 
         public static readonly IEnumerable<string> PolicyPermissions = new[]
         {
-            GetAll, SetAgent
+            GetAll, AppointAgent
         };
     }
 

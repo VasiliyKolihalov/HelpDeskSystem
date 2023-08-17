@@ -1,9 +1,9 @@
 ﻿using Authentication.Infrastructure.Constants;
 using Authentication.Infrastructure.Extensions;
-using Authentication.Infrastructure.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SupportTickets.WebApi.Models.Messages;
+using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Services;
 using static SupportTickets.WebApi.Constants.PermissionNames;
@@ -30,9 +30,9 @@ public class SupportTicketsController : ControllerBase
     }
 
     [HttpGet("my")]
-    public async Task<IEnumerable<SupportTicketPreview>> GetBasedOnAccountAsync()
+    public async Task<IEnumerable<SupportTicketPreview>> GetByAccountAsync()
     {
-        return await _supportTicketsService.GetBasedOnAccountIdAsync(this.GetAccountIdFromJwt<Guid>());
+        return await _supportTicketsService.GetByAccountIdAsync(this.GetAccountIdFromJwt<Guid>());
     }
 
     [HttpGet("{id:guid}")]
@@ -61,21 +61,13 @@ public class SupportTicketsController : ControllerBase
         await _supportTicketsService.DeleteAsync(id);
     }
 
-
-    [HttpPost("{id:guid}/close")]
-    public async Task CloseAsync(Guid id)
-    {
-        await _supportTicketsService.CloseAsync(id, this.GetAccountFromJwt<Guid>());
-    }
-
-
     #region Agents
 
-    [HttpPost("{supportTicketId:guid}/agent/set/{userId:guid}")]
-    [Authorize(Policy = SupportTicketPermissions.SetAgent)]
-    public async Task SetAgentAsync(Guid supportTicketId, Guid userId)
+    [HttpPost("agent/appoint")]
+    [Authorize(Policy = SupportTicketPermissions.AppointAgent)]
+    public async Task AppointAgentAsync(AgentAppoint agentAppoint)
     {
-        await _supportTicketsService.SetAgentAsync(supportTicketId, userId);
+        await _supportTicketsService.AppointAgentAsync(agentAppoint);
     }
 
     #endregion
@@ -100,5 +92,33 @@ public class SupportTicketsController : ControllerBase
         await _supportTicketsService.DeleteMessageAsync(messageId, this.GetAccountIdFromJwt<Guid>());
     }
 
+    #endregion
+
+    #region Solutions
+    
+    [HttpPost("solutions/suggest")]
+    public async Task SuggestSolution(SolutionSuggest solutionSuggest)
+    {
+        await _supportTicketsService.SuggestSolutionAsync(solutionSuggest, this.GetAccountIdFromJwt<Guid>());
+    }
+    
+    [HttpPost("{id:guid}/solutions/accept")]
+    public async Task AcceptSolutionAsync(Guid id)
+    {
+        await _supportTicketsService.AcceptSolutionAsync(id, this.GetAccountIdFromJwt<Guid>());
+    }
+    
+    [HttpPost("{id:guid}/solutions/reject")]
+    public async Task RejectSolutionAsync(Guid id)
+    {
+        await _supportTicketsService.RejectSolutionAsync(id, this.GetAccountIdFromJwt<Guid>());
+    }
+    
+    [HttpPost("{id:guid}/solutions/close")]
+    public async Task CloseAsync(Guid id)
+    {
+        await _supportTicketsService.CloseAsync(id, this.GetAccountFromJwt<Guid>());
+    }
+    
     #endregion
 }

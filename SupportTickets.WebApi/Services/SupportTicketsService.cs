@@ -3,6 +3,7 @@ using AutoMapper;
 using Infrastructure.Exceptions;
 using SupportTickets.WebApi.Constants;
 using SupportTickets.WebApi.Models.Messages;
+using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.SupportTickets;
@@ -39,7 +40,7 @@ public class SupportTicketsService
         return _mapper.Map<IEnumerable<SupportTicketPreview>>(supportTickets);
     }
 
-    public async Task<IEnumerable<SupportTicketPreview>> GetBasedOnAccountIdAsync(Guid accountId)
+    public async Task<IEnumerable<SupportTicketPreview>> GetByAccountIdAsync(Guid accountId)
     {
         IEnumerable<SupportTicket> supportTickets = await _supportTicketsRepository.GetBasedOnAccountAsync(accountId);
 
@@ -65,6 +66,7 @@ public class SupportTicketsService
         var supportTicket = _mapper.Map<SupportTicket>(supportTicketCreate);
         supportTicket.Id = Guid.NewGuid();
         supportTicket.User = _mapper.Map<User>(account);
+        supportTicket.Status = SupportTicketStatus.Open;
 
         await _supportTicketsRepository.InsertAsync(supportTicket);
 
@@ -79,8 +81,8 @@ public class SupportTicketsService
                                       ?? throw new NotFoundException(
                                           $"SupportTicket with id: {supportTicketUpdate.Id} not found");
 
-        if (supportTicket.IsClose)
-            throw new BadRequestException($"SupportTicket with id: {supportTicketUpdate.Id} close");
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {supportTicketUpdate.Id} not open");
 
         if (supportTicket.User.Id != account.Id && !account.HasPermission(Update))
             throw new UnauthorizedException();
@@ -104,34 +106,34 @@ public class SupportTicketsService
                                       ?? throw new NotFoundException(
                                           $"SupportTicket with id: {supportTicketId} not found");
 
-        if (supportTicket.IsClose)
-            throw new BadRequestException($"SupportTicket with id: {supportTicketId} close");
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {supportTicketId} not open");
 
         if (supportTicket.Agent?.Id != account.Id && !account.HasPermission(Close))
             throw new UnauthorizedException();
 
-        supportTicket.IsClose = true;
+        supportTicket.Status = SupportTicketStatus.Close;
         await _supportTicketsRepository.UpdateAsync(supportTicket);
     }
 
-    public async Task SetAgentAsync(Guid supportTicketId, Guid userId)
+    public async Task AppointAgentAsync(AgentAppoint agentAppoint)
     {
-        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(agentAppoint.SupportTicketId)
                                       ?? throw new NotFoundException(
-                                          $"SupportTicket with id: {supportTicketId} not found");
+                                          $"SupportTicket with id: {agentAppoint.SupportTicketId} not found");
 
-        if (supportTicket.IsClose)
-            throw new BadRequestException($"SupportTicket with id: {supportTicketId} close");
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {agentAppoint.SupportTicketId} not open");
 
-        if (!await _usersRepository.IsExistsAsync(userId))
-            throw new NotFoundException($"User with id: {userId} not found");
+        if (!await _usersRepository.IsExistsAsync(agentAppoint.UserId))
+            throw new NotFoundException($"User with id: {agentAppoint.UserId} not found");
 
-        Account<Guid> userAccount = await _accountsClient.SendGetRequestAsync(accountId: userId);
+        Account<Guid> userAccount = await _accountsClient.SendGetRequestAsync(accountId: agentAppoint.UserId);
 
         if (!userAccount.HasRole(RoleNames.Agent))
             throw new BadRequestException("User are not agent");
 
-        supportTicket.Agent = new User { Id = userId };
+        supportTicket.Agent = new User { Id = agentAppoint.UserId };
         await _supportTicketsRepository.UpdateAsync(supportTicket);
     }
 
@@ -141,8 +143,8 @@ public class SupportTicketsService
                                       ?? throw new NotFoundException(
                                           $"SupportTicket with id: {messageCreate.SupportTicketId} not found");
 
-        if (supportTicket.IsClose)
-            throw new BadRequestException($"SupportTicket with id: {messageCreate.SupportTicketId} close");
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {messageCreate.SupportTicketId} not open");
 
         if (!IsAccountRelatedToSupportTicket(supportTicket, account.Id))
             throw new UnauthorizedException();
@@ -162,8 +164,8 @@ public class SupportTicketsService
 
         SupportTicket supportTicket = (await _supportTicketsRepository.GetByIdAsync(message.SupportTicketId))!;
 
-        if (supportTicket.IsClose)
-            throw new BadRequestException($"SupportTicket with id: {supportTicket.Id} close");
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {supportTicket.Id} not open");
 
         if (message.User.Id != accountId)
             throw new UnauthorizedException();
@@ -178,13 +180,77 @@ public class SupportTicketsService
 
         SupportTicket supportTicket = (await _supportTicketsRepository.GetByIdAsync(message.SupportTicketId))!;
 
-        if (supportTicket.IsClose)
-            throw new BadRequestException($"SupportTicket with id: {supportTicket.Id} close");
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {supportTicket.Id} not open");
 
         if (message.User.Id != accountId)
             throw new UnauthorizedException();
 
         await _supportTicketsRepository.DeleteMessageAsync(messageId);
+    }
+
+    public async Task SuggestSolutionAsync(SolutionSuggest solutionSuggest, Guid accountId)
+    {
+        Message message = await _supportTicketsRepository.GetMessageByIdAsync(solutionSuggest.MessageId)
+                          ?? throw new NotFoundException($"Message with id: {solutionSuggest.MessageId} not found");
+
+        SupportTicket supportTicket = (await _supportTicketsRepository.GetByIdAsync(message.SupportTicketId))!;
+
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {supportTicket.Id} not open");
+
+        if (supportTicket.Agent?.Id != accountId)
+            throw new UnauthorizedException();
+
+        if (supportTicket.Solutions.Any(_ => _.Status == SolutionStatus.Suggested))
+            throw new BadRequestException("Exists solution which already suggested");
+
+        if (supportTicket.Solutions.Any(_ => _.MessageId == solutionSuggest.MessageId))
+            throw new BadRequestException($"Message with id: {solutionSuggest.MessageId} was already solution");
+
+        var solution = _mapper.Map<Solution>(solutionSuggest);
+        solution.Status = SolutionStatus.Suggested;
+        await _supportTicketsRepository.AddSolutionAsync(solution);
+    }
+
+    public async Task AcceptSolutionAsync(Guid supportTicketId, Guid accountId)
+    {
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
+                                      ?? throw new NotFoundException(
+                                          $"SupportTicket with id: {supportTicketId} not found");
+
+        if (supportTicket.User.Id != accountId)
+            throw new UnauthorizedException();
+
+        Solution solution = supportTicket.Solutions.FirstOrDefault(_ => _.Status == SolutionStatus.Suggested)
+                            ?? throw new BadRequestException("Suggested solution not exists");
+
+        solution.Status = SolutionStatus.Accepted;
+        await _supportTicketsRepository.UpdateSolutionAsync(solution);
+
+        supportTicket.Status = SupportTicketStatus.Solved;
+        await _supportTicketsRepository.UpdateAsync(supportTicket);
+    }
+
+    public async Task RejectSolutionAsync(Guid supportTicketId, Guid accountId)
+    {
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
+                                      ?? throw new NotFoundException(
+                                          $"SupportTicket with id: {supportTicketId} not found");
+
+        if (supportTicket.User.Id != accountId)
+            throw new UnauthorizedException();
+
+        Solution solution = supportTicket.Solutions.FirstOrDefault(_ => _.Status == SolutionStatus.Suggested)
+                            ?? throw new BadRequestException("Suggested solution not exists");
+
+        solution.Status = SolutionStatus.Rejected;
+        await _supportTicketsRepository.UpdateSolutionAsync(solution);
+    }
+
+    private static bool IsSupportTicketOpen(SupportTicket supportTicket)
+    {
+        return supportTicket.Status == SupportTicketStatus.Open;
     }
 
     private static bool IsAccountRelatedToSupportTicket(SupportTicket supportTicket, Guid accountId)
