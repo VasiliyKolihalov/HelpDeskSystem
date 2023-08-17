@@ -49,26 +49,11 @@
       "SwaggerKey": "SupportTickets"
     },
     {
-      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/close",
+      "UpstreamPathTemplate": "/gateway/supporttickets/agent/appoint",
       "UpstreamHttpMethod": [
         "Post"
       ],
-      "DownstreamPathTemplate": "/supporttickets/{id}/close",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "support_tickets_webapi",
-          "Port": 80
-        }
-      ],
-      "SwaggerKey": "SupportTickets"
-    },
-    {
-      "UpstreamPathTemplate": "/gateway/supporttickets/{supportTicketId}/agent/set/{userId}",
-      "UpstreamHttpMethod": [
-        "Post"
-      ],
-      "DownstreamPathTemplate": "/supporttickets/{supportTicketId}/agent/set/{userId}",
+      "DownstreamPathTemplate": "/supporttickets/agent/appoint",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -100,6 +85,66 @@
         "Delete"
       ],
       "DownstreamPathTemplate": "/supporttickets/messages/{messageId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/solutions/suggest",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/solutions/suggest",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/solutions/accept",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/solutions/accept",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/solutions/reject",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/solutions/reject",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/solutions/close",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/solutions/close",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Repositories;
 using SupportTickets.WebApi.Models.Messages;
+using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 
 namespace SupportTickets.WebApi.Repositories.SupportTickets;
@@ -12,4 +13,7 @@ public interface ISupportTicketsRepository : IRepository<SupportTicket, Guid>
     public Task AddMessageAsync(Message message);
     public Task UpdateMessageAsync(Message message);
     public Task DeleteMessageAsync(Guid messageId);
+
+    public Task AddSolutionAsync(Solution solution);
+    public Task UpdateSolutionAsync(Solution solution);
 }
