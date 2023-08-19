@@ -5,7 +5,7 @@ using Dapper.Transaction;
 using Infrastructure.Extensions;
 using Infrastructure.Services.Persistence;
 
-namespace Authentication.WebApi.Repositories;
+namespace Authentication.WebApi.Repositories.Roles;
 
 public class RolesRepository : IRolesRepository
 {
@@ -18,10 +18,10 @@ public class RolesRepository : IRolesRepository
 
     public async Task<IEnumerable<UserRole>> GetAllAsync()
     {
-        const string rolesQuery = @"select * from Roles";
-        const string permissionsQuery = @"select * from Permissions permissions
-                                          inner join RolesPermissions rolesPermissions on permissions.Id = rolesPermissions.PermissionId
-                                          where rolesPermissions.RoleId = @Id";
+        const string rolesQuery = "select * from Roles";
+        const string permissionsQuery = "select * from Permissions permissions " +
+                                        "inner join RolesPermissions rolesPermissions on permissions.Id = rolesPermissions.PermissionId " +
+                                        "where rolesPermissions.RoleId = @Id";
 
         IEnumerable<UserRole> roles = null!;
         await using DbConnection connection = _dbContext.CreateConnection();
@@ -38,10 +38,10 @@ public class RolesRepository : IRolesRepository
 
     public async Task<UserRole?> GetByIdAsync(string id)
     {
-        const string roleQuery = @"select * from Roles where Id = @id";
-        const string permissionsQuery = @"select * from Permissions permissions
-                                          inner join RolesPermissions rolesPermissions on permissions.Id = rolesPermissions.PermissionId
-                                          where rolesPermissions.RoleId = @Id";
+        const string roleQuery = "select * from Roles where Id = @id";
+        const string permissionsQuery = "select * from Permissions permissions " +
+                                        "inner join RolesPermissions rolesPermissions on permissions.Id = rolesPermissions.PermissionId " +
+                                        "where rolesPermissions.RoleId = @Id";
 
         UserRole? role = null;
         await using DbConnection connection = _dbContext.CreateConnection();

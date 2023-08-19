@@ -1,5 +1,6 @@
 ﻿using Authentication.WebApi.Models.Roles;
-using Authentication.WebApi.Repositories;
+using Authentication.WebApi.Repositories.Permissions;
+using Authentication.WebApi.Repositories.Roles;
 using AutoMapper;
 using Infrastructure.Exceptions;
 

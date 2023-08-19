@@ -19,10 +19,6 @@ public class Migration14082023 : Migration
     public override void Down()
     {
         Delete
-            .FromTable("RolesPermissions")
-            .Row(new { RoleId = "admin", PermissionId = "supporttickets.close" });
-
-        Delete
             .FromTable("Permissions")
             .Row(new { Id = "supporttickets.close" });
     }

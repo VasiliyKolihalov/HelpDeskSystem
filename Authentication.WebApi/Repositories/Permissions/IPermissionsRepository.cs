@@ -1,6 +1,6 @@
 ﻿using Authentication.WebApi.Models.Permissions;
 
-namespace Authentication.WebApi.Repositories;
+namespace Authentication.WebApi.Repositories.Permissions;
 
 public interface IPermissionsRepository
 {

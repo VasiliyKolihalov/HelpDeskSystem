@@ -3,12 +3,12 @@ using Authentication.Infrastructure.Services;
 using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Models.Http.Users;
 using Authentication.WebApi.Models.Messaging;
-using Authentication.WebApi.Repositories;
+using Authentication.WebApi.Repositories.Accounts;
+using Authentication.WebApi.Repositories.Roles;
 using Authentication.WebApi.Services.Clients.Users;
 using AutoMapper;
 using Infrastructure.Exceptions;
 using Infrastructure.Services.Messaging;
-using static Authentication.WebApi.Constants.PermissionNames;
 using BCryptNet = BCrypt.Net.BCrypt;
 
 namespace Authentication.WebApi.Services;
@@ -39,14 +39,6 @@ public class AccountsService
         _rabbitMqPublisher = rabbitMqPublisher;
         _emailConfirmCodeProvider = emailConfirmCodeProvider;
         _mapper = mapper;
-    }
-
-    public async Task<Account<Guid>> GetByIdAsync(Guid accountId)
-    {
-        UserAccount userAccount = await _accountsRepository.GetByIdAsync(accountId)
-                                  ?? throw new NotFoundException($"Account with id {accountId} not found");
-
-        return _mapper.Map<Account<Guid>>(userAccount);
     }
 
     public async Task<string> RegisterAsync(UserAccountRegister register)

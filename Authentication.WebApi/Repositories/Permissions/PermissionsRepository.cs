@@ -4,7 +4,7 @@ using Dapper.Transaction;
 using Infrastructure.Extensions;
 using Infrastructure.Services.Persistence;
 
-namespace Authentication.WebApi.Repositories;
+namespace Authentication.WebApi.Repositories.Permissions;
 
 public class PermissionsRepository : IPermissionsRepository
 {

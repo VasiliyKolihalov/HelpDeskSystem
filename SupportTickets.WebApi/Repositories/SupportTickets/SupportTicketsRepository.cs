@@ -20,16 +20,16 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task<IEnumerable<SupportTicket>> GetAllAsync()
     {
-        const string supportTicketsQuery = @"select * from SupportTickets
-                                             left join Users us on SupportTickets.UserId = us.Id
-                                             inner join Users agents on SupportTickets.AgentId = agents.Id";
-        const string messagesQuery = @"select * from Messages 
-                                       inner join Users users on Messages.UserId = users.Id
-                                       where SupportTicketId = @Id";
+        const string supportTicketsQuery = "select * from SupportTickets " +
+                                           "inner join Users us on SupportTickets.UserId = us.Id " +
+                                           "left join Users agents on SupportTickets.AgentId = agents.Id";
+        const string messagesQuery = "select * from Messages " +
+                                     "inner join Users users on Messages.UserId = users.Id " +
+                                     "where SupportTicketId = @Id";
 
-        const string solutionsQuery = @"select * from Solutions
-                                        inner join Messages messages on Solutions.MessageId = messages.Id
-                                        where messages.SupportTicketId = @Id";
+        const string solutionsQuery = "select * from Solutions " +
+                                      "inner join Messages messages on Solutions.MessageId = messages.Id " +
+                                      "where messages.SupportTicketId = @Id";
 
         IEnumerable<SupportTicket> tickets = null!;
         await using DbConnection connection = _dbContext.CreateConnection();
@@ -57,17 +57,17 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task<SupportTicket?> GetByIdAsync(Guid id)
     {
-        const string query = @"select * from SupportTickets
-                               inner join Users us on SupportTickets.UserId = us.Id
-                               left join Users agents on SupportTickets.AgentId = agents.Id
-                               where SupportTickets.Id = @id";
-        const string messagesQuery = @"select * from Messages 
-                                       inner join Users users on Messages.UserId = users.Id 
-                                       where SupportTicketId = @Id";
+        const string query = "select * from SupportTickets " +
+                             "inner join Users us on SupportTickets.UserId = us.Id " +
+                             "left join Users agents on SupportTickets.AgentId = agents.Id " +
+                             "where SupportTickets.Id = @id";
+        const string messagesQuery = "select * from Messages " +
+                                     "inner join Users users on Messages.UserId = users.Id " +
+                                     "where SupportTicketId = @Id";
 
-        const string solutionsQuery = @"select * from Solutions
-                                        inner join Messages messages on Solutions.MessageId = messages.Id
-                                        where messages.SupportTicketId = @Id";
+        const string solutionsQuery = "select * from Solutions " +
+                                      "inner join Messages messages on Solutions.MessageId = messages.Id " +
+                                      "where messages.SupportTicketId = @Id";
 
         SupportTicket? supportTicket = null;
         await using DbConnection connection = _dbContext.CreateConnection();
@@ -106,17 +106,24 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task InsertAsync(SupportTicket item)
     {
-        const string query = "insert into SupportTickets values (@Id, @Description, @UserId, @AgentId, @Status)";
+        const string query = "insert into SupportTickets values (" +
+                             "@Id, " +
+                             "@Description, " +
+                             "@UserId, " +
+                             "@AgentId, " +
+                             "@Status, " +
+                             "@Priority)";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             var param = new
             {
-                item.Id, 
-                item.Description, 
+                item.Id,
+                item.Description,
                 UserId = item.User.Id,
                 AgentId = item.Agent?.Id,
-                Status = item.Status.ToString()
+                Status = item.Status.ToString(),
+                Priority = item.Priority.ToString()
             };
             await transaction.ExecuteAsync(query, param);
         });
@@ -124,15 +131,23 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task UpdateAsync(SupportTicket item)
     {
-        const string query = @"update SupportTickets set 
-                               Description = @Description, 
-                               AgentId = @AgentId,
-                               Status = @Status
-                               where Id = @Id";
+        const string query = "update SupportTickets " +
+                             "set Description = @Description, " +
+                             "AgentId = @AgentId, " +
+                             "Status = @Status, " +
+                             "Priority = @Priority " +
+                             "where Id = @Id";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(
             sql: query,
-            param: new { item.Id, item.Description, AgentId = item.Agent?.Id, Status = item.Status.ToString() }));
+            param: new
+            {
+                item.Id,
+                item.Description,
+                AgentId = item.Agent?.Id,
+                Status = item.Status.ToString(),
+                Priority = item.Priority.ToString()
+            }));
     }
 
     public async Task DeleteAsync(Guid id)
@@ -147,16 +162,16 @@ public class SupportTicketsRepository : ISupportTicketsRepository
 
     public async Task<IEnumerable<SupportTicket>> GetBasedOnAccountAsync(Guid accountId)
     {
-        const string query = @"select * from SupportTickets
-                               inner join Users us on SupportTickets.UserId = us.Id
-                               left join Users agents on SupportTickets.AgentId = agents.Id
-                               where SupportTickets.UserId = @accountId or SupportTickets.AgentId = @accountId";
-        const string messagesQuery = @"select * from Messages 
-                                       inner join Users users on Messages.UserId = users.Id
-                                       where SupportTicketId = @Id";
-        const string solutionsQuery = @"select * from Solutions
-                                        inner join Messages messages on Solutions.MessageId = messages.Id
-                                        where messages.SupportTicketId = @Id";
+        const string query = "select * from SupportTickets " +
+                             "inner join Users us on SupportTickets.UserId = us.Id " +
+                             "left join Users agents on SupportTickets.AgentId = agents.Id " +
+                             "where SupportTickets.UserId = @accountId or SupportTickets.AgentId = @accountId";
+        const string messagesQuery = "select * from Messages " +
+                                     "inner join Users users on Messages.UserId = users.Id " +
+                                     "where SupportTicketId = @Id";
+        const string solutionsQuery = "select * from Solutions " +
+                                      "inner join Messages messages on Solutions.MessageId = messages.Id " +
+                                      "where messages.SupportTicketId = @Id";
 
         IEnumerable<SupportTicket> supportTickets = null!;
         await using DbConnection connection = _dbContext.CreateConnection();
@@ -184,6 +199,48 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         return supportTickets;
     }
 
+    public async Task<IEnumerable<SupportTicket>> GetAllWithoutAgent()
+    {
+        const string supportTicketsQuery = "select * from SupportTickets " +
+                                           "inner join Users us on SupportTickets.UserId = us.Id " +
+                                           "where SupportTickets.AgentId is null";
+
+        const string messagesQuery = "select * from Messages " +
+                                     "inner join Users users on Messages.UserId = users.Id " +
+                                     "where SupportTicketId = @Id";
+
+        const string solutionsQuery = "select * from Solutions " +
+                                      "inner join Messages messages on Solutions.MessageId = messages.Id " +
+                                      "where messages.SupportTicketId = @Id";
+
+        IEnumerable<SupportTicket> tickets = null!;
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            tickets = (await transaction.QueryAsync<SupportTicket, User, SupportTicket>(
+                sql: supportTicketsQuery,
+                map: (supportTicket, user) =>
+                {
+                    supportTicket.User = user;
+                    return supportTicket;
+                })).ToList();
+
+            if (!tickets.Any())
+                return;
+
+            foreach (SupportTicket supportTicket in tickets)
+            {
+                supportTicket.Messages =
+                    await transaction.QueryAsync<Message, User, Message>(messagesQuery, MapMessagesQuery,
+                        new { supportTicket.Id });
+
+                supportTicket.Solutions =
+                    await transaction.QueryAsync<Solution>(solutionsQuery, new { supportTicket.Id });
+            }
+        });
+        return tickets;
+    }
+
     private static SupportTicket MapSupportTicketQuery(SupportTicket supportTicket, User user, User agent)
     {
         supportTicket.User = user;
@@ -191,11 +248,11 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         return supportTicket;
     }
 
-
     public async Task<Message?> GetMessageByIdAsync(Guid messageId)
     {
-        const string query =
-            "select * from Messages inner join Users users on Messages.UserId = users.Id  where Messages.Id = @messageId";
+        const string query = "select * from Messages " +
+                             "inner join Users users on Messages.UserId = users.Id " +
+                             "where Messages.Id = @messageId";
 
         Message? message = null;
         await using DbConnection connection = _dbContext.CreateConnection();
@@ -241,6 +298,30 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             await transaction.ExecuteAsync(query, param: new { messageId });
+        });
+    }
+
+    public async Task<IEnumerable<User>> GetAgentsHistoryAsync(Guid supportTicketId)
+    {
+        const string query = "select * from Users " +
+                             "inner join SupportTicketsAgents agents on Users.Id = agents.AgentId " +
+                             "where agents.SupportTicketId = @supportTicketId";
+        IEnumerable<User> users = null!;
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            users = await transaction.QueryAsync<User>(query, param: new { supportTicketId });
+        });
+        return users;
+    }
+
+    public async Task AddToAgentsHistoryAsync(Guid supportTicketId, Guid userId)
+    {
+        const string query = "insert into SupportTicketsAgents values (@supportTicketId, @userId)";
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            await transaction.QueryAsync<User>(query, param: new { supportTicketId, userId });
         });
     }
 

@@ -1,14 +1,14 @@
 using Authentication.Infrastructure.Models;
 using AutoMapper;
+using Dapper;
 using Infrastructure.Exceptions;
 using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.SupportTickets;
-using SupportTickets.WebApi.Repositories.Users;
 using SupportTickets.WebApi.Services;
-using SupportTickets.WebApi.Services.Clients;
+using SupportTickets.WebApi.Services.JobsManagers;
 using Message = SupportTickets.WebApi.Models.Messages.Message;
 
 namespace SupportTickets.Tests;
@@ -16,8 +16,7 @@ namespace SupportTickets.Tests;
 public class Tests
 {
     private Mock<ISupportTicketsRepository> _supportTicketsRepository = null!;
-    private Mock<IUsersRepository> _usersRepository = null!;
-    private Mock<IAccountsClient> _accountsClient = null!;
+    private Mock<IEscalationsManager> _escalationsManager = null!;
     private Mock<IMapper> _mapper = null!;
     private SupportTicketsService _supportTicketsService = null!;
 
@@ -25,14 +24,12 @@ public class Tests
     public void Setup()
     {
         _supportTicketsRepository = new Mock<ISupportTicketsRepository>();
-        _usersRepository = new Mock<IUsersRepository>();
-        _accountsClient = new Mock<IAccountsClient>();
+        _escalationsManager = new Mock<IEscalationsManager>();
         _mapper = new Mock<IMapper>();
 
         _supportTicketsService = new SupportTicketsService(
             _supportTicketsRepository.Object,
-            _usersRepository.Object,
-            _accountsClient.Object,
+            _escalationsManager.Object,
             _mapper.Object);
     }
 
@@ -51,6 +48,39 @@ public class Tests
         _supportTicketsRepository.Verify(_ => _.GetAllAsync(), Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<IEnumerable<SupportTicketPreview>>(supportTickets), Once);
+        _mapper.VerifyNoOtherCalls();
+    }
+
+    [Test, AutoData]
+    public async Task GetFreeAsync_CorrectCase_Pass(List<SupportTicket> supportTickets, Guid accountId)
+    {
+        // Arrange
+        _supportTicketsRepository.Setup(_ => _.GetAllWithoutAgent()).ReturnsAsync(supportTickets);
+
+        Guid supportTicketIdWhereAccountWasNotAgent = supportTickets.First().Id;
+        _supportTicketsRepository
+            .Setup(_ => _.GetAgentsHistoryAsync(supportTicketIdWhereAccountWasNotAgent))
+            .ReturnsAsync(Array.Empty<User>());
+
+        var formerAgents = new[] { new User { Id = accountId } };
+        _supportTicketsRepository
+            .Setup(repository => repository.GetAgentsHistoryAsync(It.IsNotIn(supportTicketIdWhereAccountWasNotAgent)))
+            .ReturnsAsync(formerAgents);
+
+        // Act
+        List<SupportTicketPreview> result = (await _supportTicketsService.GetFreeAsync(accountId)).AsList();
+
+        // Assert
+        result.Should().NotBeNull();
+        _supportTicketsRepository.Verify(_ => _.GetAllWithoutAgent(), Once);
+        _supportTicketsRepository.Verify(_ => _.GetAgentsHistoryAsync(It.IsAny<Guid>()), Exactly(supportTickets.Count));
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _mapper.Verify(
+            expression: mapper => mapper.Map<IEnumerable<SupportTicketPreview>>(
+                It.Is<IEnumerable<SupportTicket>>(_ =>
+                    _.Count() == 1 &&
+                    _.First().Id == supportTicketIdWhereAccountWasNotAgent)),
+            times: Once);
         _mapper.VerifyNoOtherCalls();
     }
 
@@ -274,6 +304,8 @@ public class Tests
                     supportTicket.Status == SupportTicketStatus.Close)),
             times: Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _escalationsManager.Verify(_ => _.CancelEscalationFor(supportTicketId));
+        _escalationsManager.VerifyNoOtherCalls();
     }
 
     [Test, AutoData]
@@ -315,105 +347,117 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task AppointAgentAsync_CorrectCase_Pass(AgentAppoint agentAppoint)
+    public async Task AppointAgentAsync_CorrectCase_Pass(Guid supportTicketId, Account<Guid> account)
     {
         // Arrange
         var supportTicketFromRepository = new SupportTicket();
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(agentAppoint.SupportTicketId))
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId))
             .ReturnsAsync(supportTicketFromRepository);
-        _usersRepository.Setup(_ => _.IsExistsAsync(agentAppoint.UserId)).ReturnsAsync(true);
-        var account = new Account<Guid> { Roles = new[] { new Role { Id = "agent" } } };
-        _accountsClient.Setup(_ => _.SendGetRequestAsync(agentAppoint.UserId)).ReturnsAsync(account);
+        _supportTicketsRepository
+            .Setup(_ => _.GetAgentsHistoryAsync(supportTicketId))
+            .ReturnsAsync(Array.Empty<User>());
+        var user = new User();
+        _mapper.Setup(_ => _.Map<User>(account)).Returns(user);
 
         // Act
-        await _supportTicketsService.AppointAgentAsync(agentAppoint);
+        await _supportTicketsService.AppointAgentAsync(supportTicketId, account);
 
         // Assert
-        _supportTicketsRepository.Verify(_ => _.GetByIdAsync(agentAppoint.SupportTicketId), Once);
+        _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicketId), Once);
+        _supportTicketsRepository.Verify(_ => _.GetAgentsHistoryAsync(supportTicketId), Once);
         _supportTicketsRepository.Verify(
             expression: repository =>
                 repository.UpdateAsync(It.Is<SupportTicket>(supportTicket =>
                     supportTicket == supportTicketFromRepository &&
-                    supportTicket.Agent!.Id == agentAppoint.UserId)),
+                    supportTicket.Priority == SupportTicketPriority.Low &&
+                    supportTicket.Agent == user)),
             times: Once);
+        _supportTicketsRepository.Verify(_ => _.AddToAgentsHistoryAsync(supportTicketId, account.Id), Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
-        _usersRepository.Verify(_ => _.IsExistsAsync(agentAppoint.UserId), Once);
-        _usersRepository.VerifyNoOtherCalls();
-        _accountsClient.Verify(_ => _.SendGetRequestAsync(agentAppoint.UserId), Once);
-        _accountsClient.VerifyNoOtherCalls();
+        _escalationsManager.Verify(_ => _.AssignEscalationFor(supportTicketId, TimeSpan.FromDays(7)), Once);
+        _escalationsManager.VerifyNoOtherCalls();
+        _mapper.Verify(_ => _.Map<User>(account), Once);
+        _mapper.VerifyNoOtherCalls();
     }
 
     [Test, AutoData]
-    public async Task AppointAgentAsync_SupportTicketNotExists_Throw(AgentAppoint agentAppoint)
+    public async Task AppointAgentAsync_SupportTicketNotExists_Throw(Guid supportTicketId, Account<Guid> account)
     {
         // Act
-        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(agentAppoint);
+        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(supportTicketId, account);
 
         // Assert
         await action
             .Should()
             .ThrowAsync<NotFoundException>()
-            .WithMessage($"SupportTicket with id: {agentAppoint.SupportTicketId} not found");
+            .WithMessage($"SupportTicket with id: {supportTicketId} not found");
     }
 
     [Test, AutoData]
-    public async Task AppointAgentAsync_SupportTicketNotOpen_Throw(AgentAppoint agentAppoint)
+    public async Task AppointAgentAsync_SupportTicketNotOpen_Throw(Guid supportTicketId, Account<Guid> account)
     {
         // Arrange
         var supportTicket = new SupportTicket
         {
             Status = SupportTicketStatus.Close
         };
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(agentAppoint.SupportTicketId))
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId))
             .ReturnsAsync(supportTicket);
 
         // Act
-        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(agentAppoint);
+        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(supportTicketId, account);
 
         // Assert
         await action
             .Should()
             .ThrowAsync<BadRequestException>()
-            .WithMessage($"SupportTicket with id: {agentAppoint.SupportTicketId} not open");
+            .WithMessage($"SupportTicket with id: {supportTicketId} not open");
     }
 
     [Test, AutoData]
-    public async Task AppointAgentAsync_UserNotExists_Throw(AgentAppoint agentAppoint)
+    public async Task AppointAgentAsync_SupportTicketAlreadyHaveAgent_Throw(Guid supportTicketId, Account<Guid> account)
     {
         // Arrange
-        var supportTicket = new SupportTicket();
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(agentAppoint.SupportTicketId))
-            .ReturnsAsync(supportTicket);
+        var supportTicketFromRepository = new SupportTicket
+        {
+            Agent = new User()
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId))
+            .ReturnsAsync(supportTicketFromRepository);
 
         // Act
-        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(agentAppoint);
-
-        // Assert
-        await action
-            .Should()
-            .ThrowAsync<NotFoundException>()
-            .WithMessage($"User with id: {agentAppoint.UserId} not found");
-    }
-
-    [Test, AutoData]
-    public async Task AppointAgentAsync_AccountHaveNoRole_Throw(AgentAppoint agentAppoint)
-    {
-        // Arrange
-        var supportTicket = new SupportTicket();
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(agentAppoint.SupportTicketId))
-            .ReturnsAsync(supportTicket);
-        _usersRepository.Setup(_ => _.IsExistsAsync(agentAppoint.UserId)).ReturnsAsync(true);
-        var account = new Account<Guid> { Roles = Array.Empty<Role>() };
-        _accountsClient.Setup(_ => _.SendGetRequestAsync(agentAppoint.UserId)).ReturnsAsync(account);
-
-        // Act
-        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(agentAppoint);
+        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(supportTicketId, account);
 
         // Assert
         await action
             .Should()
             .ThrowAsync<BadRequestException>()
-            .WithMessage("User are not agent");
+            .WithMessage($"SupportTicket with id: {supportTicketId} already have agent");
+    }
+
+    [Test, AutoData]
+    public async Task AppointAgentAsync_AccountAlreadyWasAgentForSupportTicket_Throw(
+        Guid supportTicketId,
+        Account<Guid> account)
+    {
+        // Arrange
+        var supportTicketFromRepository = new SupportTicket();
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId))
+            .ReturnsAsync(supportTicketFromRepository);
+        var formerAgents = new[] { new User { Id = account.Id } };
+        _supportTicketsRepository
+            .Setup(_ => _.GetAgentsHistoryAsync(supportTicketId))
+            .ReturnsAsync(formerAgents);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService.AppointAgentAsync(supportTicketId, account);
+
+        // Assert
+        await action
+            .Should()
+            .ThrowAsync<BadRequestException>()
+            .WithMessage(
+                $"Account with id: {account.Id} was already agent for SupportTicket with id: {supportTicketId}");
     }
 
     [Test, AutoData]
@@ -861,6 +905,8 @@ public class Tests
                 supportTicket == supportTicketFromRepository && supportTicket.Status == SupportTicketStatus.Solved)),
             times: Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _escalationsManager.Verify(_ => _.CancelEscalationFor(supportTicketId));
+        _escalationsManager.VerifyNoOtherCalls();
     }
 
     [Test, AutoData]

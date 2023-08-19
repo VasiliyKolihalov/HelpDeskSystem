@@ -6,7 +6,7 @@ using Dapper.Transaction;
 using Infrastructure.Extensions;
 using Infrastructure.Services.Persistence;
 
-namespace Authentication.WebApi.Repositories;
+namespace Authentication.WebApi.Repositories.Accounts;
 
 public class AccountsRepository : IAccountsRepository
 {
@@ -19,13 +19,15 @@ public class AccountsRepository : IAccountsRepository
 
     public async Task<IEnumerable<UserAccount>> GetAllAsync()
     {
-        const string accountQuery = @"select * from Accounts";
-        const string rolesQuery = @"select * from Roles roles
-                                    inner join AccountsRoles accountsRoles on roles.Id = accountsRoles.RoleId
-                                    where accountsRoles.AccountId = @Id";
-        const string permissionsQuery = @"select * from Permissions
-                                          inner join RolesPermissions rolesPermissions on Permissions.Id = rolesPermissions.PermissionId
-                                          where rolesPermissions.RoleId = @Id";
+        const string accountQuery = "select * from Accounts";
+
+        const string rolesQuery = "select * from Roles " +
+                                  "roles inner join AccountsRoles accountsRoles on roles.Id = accountsRoles.RoleId " +
+                                  "where accountsRoles.AccountId = @Id";
+
+        const string permissionsQuery = "select * from Permissions " +
+                                        " inner join RolesPermissions rolesPermissions on Permissions.Id = rolesPermissions.PermissionId " +
+                                        "where rolesPermissions.RoleId = @Id";
         IEnumerable<UserAccount> accounts = null!;
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
@@ -60,13 +62,13 @@ public class AccountsRepository : IAccountsRepository
 
     public async Task<UserAccount?> GetByIdAsync(Guid id)
     {
-        const string accountQuery = @"select * from Accounts where Id = @id";
-        const string rolesQuery = @"select * from Roles roles
-                                    inner join AccountsRoles accountsRoles on roles.Id = accountsRoles.RoleId
-                                    where accountsRoles.AccountId = @id";
-        const string permissionsQuery = @"select * from Permissions
-                                          inner join RolesPermissions rolesPermissions on Permissions.Id = rolesPermissions.PermissionId
-                                          where rolesPermissions.RoleId = @Id";
+        const string accountQuery = "select * from Accounts where Id = @id";
+        const string rolesQuery = "select * from Roles roles " +
+                                  "inner join AccountsRoles accountsRoles on roles.Id = accountsRoles.RoleId " +
+                                  "where accountsRoles.AccountId = @id";
+        const string permissionsQuery = "select * from Permissions " +
+                                        "inner join RolesPermissions rolesPermissions on Permissions.Id = rolesPermissions.PermissionId " +
+                                        "where rolesPermissions.RoleId = @Id";
         UserAccount? account = null;
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
@@ -118,11 +120,11 @@ public class AccountsRepository : IAccountsRepository
 
     public async Task UpdateAsync(UserAccount item)
     {
-        const string query = @"update Accounts set 
-                               Email = @Email, 
-                               IsEmailConfirm = @IsEmailConfirm,
-                               PasswordHash = @PasswordHash 
-                               where Id = @Id";
+        const string query = "update Accounts set " +
+                             "Email = @Email, " +
+                             "IsEmailConfirm = @IsEmailConfirm, " +
+                             "PasswordHash = @PasswordHash " +
+                             "where Id = @Id";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(
             async transaction => await transaction.ExecuteAsync(query, item));
@@ -138,13 +140,13 @@ public class AccountsRepository : IAccountsRepository
 
     public async Task<UserAccount?> GetByEmailAsync(string email)
     {
-        const string accountQuery = @"select * from Accounts where Email = @email";
-        const string rolesQuery = @"select * from Roles roles
-                                    inner join AccountsRoles accountsRoles on roles.id = accountsRoles.RoleId
-                                    where accountsRoles.AccountId = @Id";
-        const string permissionsQuery = @"select * from Permissions
-                                          inner join RolesPermissions rolesPermissions on Permissions.Id = rolesPermissions.PermissionId
-                                          where rolesPermissions.RoleId = @Id";
+        const string accountQuery = "select * from Accounts where Email = @email";
+        const string rolesQuery = "select * from Roles roles " +
+                                  "inner join AccountsRoles accountsRoles on roles.id = accountsRoles.RoleId " +
+                                  "where accountsRoles.AccountId = @Id";
+        const string permissionsQuery = "select * from Permissions " +
+                                        "inner join RolesPermissions rolesPermissions on Permissions.Id = rolesPermissions.PermissionId " +
+                                        "where rolesPermissions.RoleId = @Id";
         UserAccount? account = null;
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
@@ -223,7 +225,7 @@ public class AccountsRepository : IAccountsRepository
         const string query = "delete from AccountsEmailConfirmCodes where AccountId = @accountId";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(
-            async transaction => await transaction.ExecuteAsync(query, new { accountId }));    
+            async transaction => await transaction.ExecuteAsync(query, new { accountId }));
     }
 
     public async Task AddRoleAsync(Guid accountId, string roleId)

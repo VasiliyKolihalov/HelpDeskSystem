@@ -2,6 +2,7 @@
 using Authentication.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SupportTickets.WebApi.Constants;
 using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
@@ -27,6 +28,13 @@ public class SupportTicketsController : ControllerBase
     public async Task<IEnumerable<SupportTicketPreview>> GetAllAsync()
     {
         return await _supportTicketsService.GetAllAsync();
+    }
+
+    [HttpGet("free")]
+    [Authorize(Policy = SupportTicketPermissions.GetFree)]
+    public async Task<IEnumerable<SupportTicketPreview>> GetFreeAsync()
+    {
+        return await _supportTicketsService.GetFreeAsync(this.GetAccountIdFromJwt<Guid>());
     }
 
     [HttpGet("my")]
@@ -63,11 +71,11 @@ public class SupportTicketsController : ControllerBase
 
     #region Agents
 
-    [HttpPost("agent/appoint")]
-    [Authorize(Policy = SupportTicketPermissions.AppointAgent)]
-    public async Task AppointAgentAsync(AgentAppoint agentAppoint)
+    [HttpPost("{supportTicketId:guid}/agent/appoint")]
+    [Authorize(Roles = RoleNames.Agent)]
+    public async Task AppointAgentAsync(Guid supportTicketId)
     {
-        await _supportTicketsService.AppointAgentAsync(agentAppoint);
+        await _supportTicketsService.AppointAgentAsync(supportTicketId, this.GetAccountFromJwt<Guid>());
     }
 
     #endregion
@@ -95,30 +103,30 @@ public class SupportTicketsController : ControllerBase
     #endregion
 
     #region Solutions
-    
+
     [HttpPost("solutions/suggest")]
     public async Task SuggestSolution(SolutionSuggest solutionSuggest)
     {
         await _supportTicketsService.SuggestSolutionAsync(solutionSuggest, this.GetAccountIdFromJwt<Guid>());
     }
-    
+
     [HttpPost("{id:guid}/solutions/accept")]
     public async Task AcceptSolutionAsync(Guid id)
     {
         await _supportTicketsService.AcceptSolutionAsync(id, this.GetAccountIdFromJwt<Guid>());
     }
-    
+
     [HttpPost("{id:guid}/solutions/reject")]
     public async Task RejectSolutionAsync(Guid id)
     {
         await _supportTicketsService.RejectSolutionAsync(id, this.GetAccountIdFromJwt<Guid>());
     }
-    
+
     [HttpPost("{id:guid}/solutions/close")]
     public async Task CloseAsync(Guid id)
     {
         await _supportTicketsService.CloseAsync(id, this.GetAccountFromJwt<Guid>());
     }
-    
+
     #endregion
 }

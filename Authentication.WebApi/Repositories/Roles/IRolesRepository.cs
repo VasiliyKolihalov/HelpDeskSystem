@@ -1,7 +1,7 @@
 ﻿using Authentication.WebApi.Models.Roles;
 using Infrastructure.Repositories;
 
-namespace Authentication.WebApi.Repositories;
+namespace Authentication.WebApi.Repositories.Roles;
 
 public interface IRolesRepository : IRepository<UserRole, string>
 {

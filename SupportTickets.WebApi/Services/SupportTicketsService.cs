@@ -1,14 +1,12 @@
 ﻿using Authentication.Infrastructure.Models;
 using AutoMapper;
 using Infrastructure.Exceptions;
-using SupportTickets.WebApi.Constants;
 using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.SupportTickets;
-using SupportTickets.WebApi.Repositories.Users;
-using SupportTickets.WebApi.Services.Clients;
+using SupportTickets.WebApi.Services.JobsManagers;
 using static SupportTickets.WebApi.Constants.PermissionNames.SupportTicketPermissions;
 
 namespace SupportTickets.WebApi.Services;
@@ -16,19 +14,18 @@ namespace SupportTickets.WebApi.Services;
 public class SupportTicketsService
 {
     private readonly ISupportTicketsRepository _supportTicketsRepository;
-    private readonly IUsersRepository _usersRepository;
-    private readonly IAccountsClient _accountsClient;
+    private readonly IEscalationsManager _escalationsManager;
     private readonly IMapper _mapper;
+
+    private static readonly TimeSpan TimeToEscalation = TimeSpan.FromDays(7);
 
     public SupportTicketsService(
         ISupportTicketsRepository supportTicketsRepository,
-        IUsersRepository usersRepository,
-        IAccountsClient accountsClient,
+        IEscalationsManager escalationsManager,
         IMapper mapper)
     {
         _supportTicketsRepository = supportTicketsRepository;
-        _usersRepository = usersRepository;
-        _accountsClient = accountsClient;
+        _escalationsManager = escalationsManager;
         _mapper = mapper;
     }
 
@@ -38,6 +35,22 @@ public class SupportTicketsService
         IEnumerable<SupportTicket> supportTickets = await _supportTicketsRepository.GetAllAsync();
 
         return _mapper.Map<IEnumerable<SupportTicketPreview>>(supportTickets);
+    }
+
+    public async Task<IEnumerable<SupportTicketPreview>> GetFreeAsync(Guid accountId)
+    {
+        IEnumerable<SupportTicket> allFreeSupportTickets = await _supportTicketsRepository.GetAllWithoutAgent();
+
+        var availableSupportTickets = new List<SupportTicket>();
+        foreach (SupportTicket supportTicket in allFreeSupportTickets)
+        {
+            IEnumerable<User> formerAgents = await _supportTicketsRepository.GetAgentsHistoryAsync(supportTicket.Id);
+            if (formerAgents.Any(_ => _.Id == accountId))
+                continue;
+            availableSupportTickets.Add(supportTicket);
+        }
+
+        return _mapper.Map<IEnumerable<SupportTicketPreview>>(availableSupportTickets);
     }
 
     public async Task<IEnumerable<SupportTicketPreview>> GetByAccountIdAsync(Guid accountId)
@@ -100,7 +113,7 @@ public class SupportTicketsService
         await _supportTicketsRepository.DeleteAsync(id);
     }
 
-    public async Task CloseAsync(Guid supportTicketId, Account<Guid> account)
+    public async Task AppointAgentAsync(Guid supportTicketId, Account<Guid> account)
     {
         SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
                                       ?? throw new NotFoundException(
@@ -109,32 +122,21 @@ public class SupportTicketsService
         if (!IsSupportTicketOpen(supportTicket))
             throw new BadRequestException($"SupportTicket with id: {supportTicketId} not open");
 
-        if (supportTicket.Agent?.Id != account.Id && !account.HasPermission(Close))
-            throw new UnauthorizedException();
+        if (supportTicket.Agent != null)
+            throw new BadRequestException($"SupportTicket with id: {supportTicketId} already have agent");
 
-        supportTicket.Status = SupportTicketStatus.Close;
+        IEnumerable<User> formerAgents = await _supportTicketsRepository.GetAgentsHistoryAsync(supportTicketId);
+
+        if (formerAgents.Any(_ => _.Id == account.Id))
+            throw new BadRequestException(
+                $"Account with id: {account.Id} was already agent for SupportTicket with id: {supportTicketId}");
+
+        supportTicket.Agent = _mapper.Map<User>(account);
+        supportTicket.Priority = SupportTicketPriority.Low;
         await _supportTicketsRepository.UpdateAsync(supportTicket);
-    }
+        await _supportTicketsRepository.AddToAgentsHistoryAsync(supportTicketId, account.Id);
 
-    public async Task AppointAgentAsync(AgentAppoint agentAppoint)
-    {
-        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(agentAppoint.SupportTicketId)
-                                      ?? throw new NotFoundException(
-                                          $"SupportTicket with id: {agentAppoint.SupportTicketId} not found");
-
-        if (!IsSupportTicketOpen(supportTicket))
-            throw new BadRequestException($"SupportTicket with id: {agentAppoint.SupportTicketId} not open");
-
-        if (!await _usersRepository.IsExistsAsync(agentAppoint.UserId))
-            throw new NotFoundException($"User with id: {agentAppoint.UserId} not found");
-
-        Account<Guid> userAccount = await _accountsClient.SendGetRequestAsync(accountId: agentAppoint.UserId);
-
-        if (!userAccount.HasRole(RoleNames.Agent))
-            throw new BadRequestException("User are not agent");
-
-        supportTicket.Agent = new User { Id = agentAppoint.UserId };
-        await _supportTicketsRepository.UpdateAsync(supportTicket);
+        _escalationsManager.AssignEscalationFor(supportTicketId, TimeToEscalation);
     }
 
     public async Task<Guid> AddMessageAsync(MessageCreate messageCreate, Account<Guid> account)
@@ -230,6 +232,8 @@ public class SupportTicketsService
 
         supportTicket.Status = SupportTicketStatus.Solved;
         await _supportTicketsRepository.UpdateAsync(supportTicket);
+
+        _escalationsManager.CancelEscalationFor(supportTicketId);
     }
 
     public async Task RejectSolutionAsync(Guid supportTicketId, Guid accountId)
@@ -246,6 +250,24 @@ public class SupportTicketsService
 
         solution.Status = SolutionStatus.Rejected;
         await _supportTicketsRepository.UpdateSolutionAsync(solution);
+    }
+
+    public async Task CloseAsync(Guid supportTicketId, Account<Guid> account)
+    {
+        SupportTicket supportTicket = await _supportTicketsRepository.GetByIdAsync(supportTicketId)
+                                      ?? throw new NotFoundException(
+                                          $"SupportTicket with id: {supportTicketId} not found");
+
+        if (!IsSupportTicketOpen(supportTicket))
+            throw new BadRequestException($"SupportTicket with id: {supportTicketId} not open");
+
+        if (supportTicket.Agent?.Id != account.Id && !account.HasPermission(Close))
+            throw new UnauthorizedException();
+
+        supportTicket.Status = SupportTicketStatus.Close;
+        await _supportTicketsRepository.UpdateAsync(supportTicket);
+
+        _escalationsManager.CancelEscalationFor(supportTicketId);
     }
 
     private static bool IsSupportTicketOpen(SupportTicket supportTicket)

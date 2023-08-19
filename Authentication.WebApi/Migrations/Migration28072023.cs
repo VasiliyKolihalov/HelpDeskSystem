@@ -9,12 +9,12 @@ public class Migration28072023 : Migration
     {
         Alter
             .Table("Accounts")
-            .AddColumn("IsEmailConfirm").AsBoolean().SetExistingRowsTo(false);
+            .AddColumn("IsEmailConfirm").AsBoolean().NotNullable().SetExistingRowsTo(false);
 
         Create
             .Table("AccountsEmailConfirmCodes")
-            .WithColumn("AccountId").AsGuid()
-            .ForeignKey("Accounts", "Id").PrimaryKey()
+            .WithColumn("AccountId").AsGuid().PrimaryKey()
+            .ForeignKey("Accounts", "Id")
             .WithColumn("ConfirmCode").AsString().PrimaryKey();
     }
 
