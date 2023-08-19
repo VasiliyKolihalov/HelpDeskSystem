@@ -1,5 +1,4 @@
 ﻿using Authentication.Infrastructure.Extensions;
-using Authentication.Infrastructure.Models;
 using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -17,13 +16,6 @@ public class AccountsController : ControllerBase
     public AccountsController(AccountsService accountsService)
     {
         _accountsService = accountsService;
-    }
-
-    [HttpGet("{accountId:guid}")]
-    [Authorize(Policy = AccountPermissions.GetById)]
-    public async Task<Account<Guid>> GetAsync(Guid accountId)
-    {
-        return await _accountsService.GetByIdAsync(accountId);
     }
 
     [HttpPost("register")]

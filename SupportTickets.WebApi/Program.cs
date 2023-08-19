@@ -1,15 +1,17 @@
 using System.Reflection;
 using Authentication.Infrastructure.Extensions;
 using Authentication.Infrastructure.Models;
-using Authentication.Infrastructure.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Infrastructure.Extensions;
 using Infrastructure.Middlewares;
 using Infrastructure.Services.Persistence;
 using SupportTickets.WebApi.Constants;
+using SupportTickets.WebApi.Filters;
 using SupportTickets.WebApi.Repositories.SupportTickets;
 using SupportTickets.WebApi.Repositories.Users;
 using SupportTickets.WebApi.Services;
-using SupportTickets.WebApi.Services.Clients;
+using SupportTickets.WebApi.Services.JobsManagers;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 ConfigureServices(builder);
@@ -30,22 +32,16 @@ static void ConfigureServices(WebApplicationBuilder builder)
         .AddTransient<ISupportTicketsRepository, SupportTicketsRepository>()
         .AddTransient<IUsersRepository, UsersRepository>();
 
+    builder.Services.AddHangfire(options => { options.UsePostgreSqlStorage(connectionString); });
+    builder.Services.AddHangfireServer();
+
     builder.Services
         .AddRabbitMqMessageConsumer(builder.Configuration.GetRequiredSection("RabbitMqOptions"))
         .AddAutoMapper(typeof(Program))
         .AddTransient<IUsersService, UsersService>()
-        .AddTransient<IJwtService, JwtService>()
-        .AddTransient<IAccountsClient, AccountsClient>()
         .AddHostedService<RabbitMqWorker>()
-        .AddTransient<SupportTicketsService>()
-        .AddHttpClient(
-            name: HttpClientNames.Accounts,
-            configureClient: client =>
-            {
-                client.BaseAddress = new Uri(
-                    builder.Configuration.GetRequiredValue<string>("HttpUrls:Accounts.WebApi"));
-            })
-        .AddDefaultRetryPollyHandler(builder.Configuration.GetRequiredSection("PollyOptions"));
+        .AddTransient<IEscalationsManager, EscalationsManager>()
+        .AddTransient<SupportTicketsService>();
 
     IConfigurationSection jwtAuthSection = builder.Configuration.GetRequiredSection("JwtAuthOptions");
     builder.Services.Configure<JwtAuthOptions>(jwtAuthSection);
@@ -81,4 +77,9 @@ static void ConfigureMiddlewares(WebApplication app)
     app.UseAuthorization();
 
     app.MapControllers();
+
+    app.UseHangfireDashboard(options: new DashboardOptions
+    {
+        Authorization = new[] { new DashboardAuthFilter() }
+    });
 }

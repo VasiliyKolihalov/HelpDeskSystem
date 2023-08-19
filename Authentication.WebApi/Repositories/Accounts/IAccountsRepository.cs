@@ -1,7 +1,7 @@
 ﻿using Authentication.WebApi.Models.Accounts;
 using Infrastructure.Repositories;
 
-namespace Authentication.WebApi.Repositories;
+namespace Authentication.WebApi.Repositories.Accounts;
 
 public interface IAccountsRepository : IRepository<UserAccount, Guid>
 {

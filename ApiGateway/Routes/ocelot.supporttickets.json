@@ -49,11 +49,26 @@
       "SwaggerKey": "SupportTickets"
     },
     {
-      "UpstreamPathTemplate": "/gateway/supporttickets/agent/appoint",
+      "UpstreamPathTemplate": "/gateway/supporttickets/free",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/free",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{supportTicketId}/agent/appoint",
       "UpstreamHttpMethod": [
         "Post"
       ],
-      "DownstreamPathTemplate": "/supporttickets/agent/appoint",
+      "DownstreamPathTemplate": "/supporttickets/{supportTicketId}/agent/appoint",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

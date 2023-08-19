@@ -5,13 +5,11 @@ public static class PermissionNames
     public static class AccountPermissions
     {
         private const string Account = "accounts";
-        public const string GetById = Account + ".getbyid";
         public const string AddRole = Account + ".addtorole";
         public const string RemoveRole = Account + ".removefromrole";
 
         public static readonly IEnumerable<string> PolicyPermissions = new[]
         {
-            GetById,
             AddRole,
             RemoveRole
         };

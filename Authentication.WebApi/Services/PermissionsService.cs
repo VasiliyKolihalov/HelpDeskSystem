@@ -1,5 +1,5 @@
 ﻿using Authentication.WebApi.Models.Permissions;
-using Authentication.WebApi.Repositories;
+using Authentication.WebApi.Repositories.Permissions;
 using AutoMapper;
 
 namespace Authentication.WebApi.Services;

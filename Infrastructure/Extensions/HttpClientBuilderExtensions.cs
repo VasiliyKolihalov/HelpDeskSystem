@@ -1,4 +1,3 @@
-using System.Net;
 using Infrastructure.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

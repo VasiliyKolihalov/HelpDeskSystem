@@ -11,6 +11,7 @@ public class SupportTicketView
     public UserView User { get; set; }
     public UserView? Agent { get; set; }
     public SupportTicketStatus Status { get; set; }
+    public SupportTicketPriority Priority { get; set; }
 
     public List<MessageView>? Messages { get; set; }
     public IEnumerable<SolutionView>? Solutions { get; set; }
