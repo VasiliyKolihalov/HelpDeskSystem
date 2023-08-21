@@ -1,6 +1,6 @@
-namespace SupportTickets.WebApi.Services.JobsManagers;
+namespace SupportTickets.WebApi.Services.JobsManagers.Escalations;
 
-public interface IEscalationsManager
+public interface ISupportTicketsEscalationManager
 {
     public void AssignEscalationFor(Guid supportTicketId, TimeSpan afterTime);
     public void CancelEscalationFor(Guid supportTicket);

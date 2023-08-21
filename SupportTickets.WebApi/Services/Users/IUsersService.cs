@@ -1,6 +1,6 @@
 using SupportTickets.WebApi.Models.Users;
 
-namespace SupportTickets.WebApi.Services;
+namespace SupportTickets.WebApi.Services.Users;
 
 public interface IUsersService
 {

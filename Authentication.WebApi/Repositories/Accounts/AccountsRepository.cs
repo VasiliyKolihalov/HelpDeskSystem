@@ -188,46 +188,6 @@ public class AccountsRepository : IAccountsRepository
         return exists;
     }
 
-    public async Task<string?> GetConfirmCodeByIdAsync(Guid accountId)
-    {
-        const string query = "select ConfirmCode from AccountsEmailConfirmCodes where AccountId = @accountId";
-        string? confirmCode = null;
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            confirmCode = await transaction.QueryFirstOrDefaultAsync<string>(query, new { accountId });
-        });
-        return confirmCode;
-    }
-
-    public async Task<bool> IsExistsConfirmCodeAsync(Guid accountId)
-    {
-        const string query = "select exists(select * from AccountsEmailConfirmCodes where AccountId = @accountId)";
-        var exists = false;
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            exists = await transaction.QuerySingleAsync<bool>(query, new { accountId });
-        });
-        return exists;
-    }
-
-    public async Task AddConfirmCodeAsync(Guid accountId, string code)
-    {
-        const string query = "insert into AccountsEmailConfirmCodes values (@accountId, @code)";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(
-            async transaction => await transaction.ExecuteAsync(query, new { accountId, code }));
-    }
-
-    public async Task DeleteConfirmCodeAsync(Guid accountId)
-    {
-        const string query = "delete from AccountsEmailConfirmCodes where AccountId = @accountId";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(
-            async transaction => await transaction.ExecuteAsync(query, new { accountId }));
-    }
-
     public async Task AddRoleAsync(Guid accountId, string roleId)
     {
         const string query = "insert into AccountsRoles values (@accountId, @roleId)";

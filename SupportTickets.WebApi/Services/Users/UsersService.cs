@@ -1,7 +1,7 @@
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.Users;
 
-namespace SupportTickets.WebApi.Services;
+namespace SupportTickets.WebApi.Services.Users;
 
 public class UsersService : IUsersService
 {
