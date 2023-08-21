@@ -4,6 +4,7 @@ using Authentication.WebApi.Models.Accounts;
 using Authentication.WebApi.Models.Http.Users;
 using Authentication.WebApi.Models.Messaging;
 using Authentication.WebApi.Repositories.Accounts;
+using Authentication.WebApi.Repositories.ConfirmCodes;
 using Authentication.WebApi.Repositories.Roles;
 using Authentication.WebApi.Services.Clients.Users;
 using AutoMapper;
@@ -17,6 +18,7 @@ public class AccountsService
 {
     private readonly IAccountsRepository _accountsRepository;
     private readonly IRolesRepository _rolesRepository;
+    private readonly IConfirmCodesRepository _confirmCodesRepository;
     private readonly IJwtService _jwtService;
     private readonly IUsersClient _usersClient;
     private readonly IRabbitMqPublisher _rabbitMqPublisher;
@@ -26,6 +28,7 @@ public class AccountsService
     public AccountsService(
         IAccountsRepository accountsRepository,
         IRolesRepository rolesRepository,
+        IConfirmCodesRepository confirmCodesRepository,
         IJwtService jwtService,
         IUsersClient usersClient,
         IRabbitMqPublisher rabbitMqPublisher,
@@ -34,6 +37,7 @@ public class AccountsService
     {
         _accountsRepository = accountsRepository;
         _rolesRepository = rolesRepository;
+        _confirmCodesRepository = confirmCodesRepository;
         _jwtService = jwtService;
         _usersClient = usersClient;
         _rabbitMqPublisher = rabbitMqPublisher;
@@ -76,11 +80,11 @@ public class AccountsService
         if (account.IsEmailConfirm)
             throw new BadRequestException("Email already confirm");
 
-        if (await _accountsRepository.IsExistsConfirmCodeAsync(accountId))
-            await _accountsRepository.DeleteConfirmCodeAsync(accountId);
+        if (await _confirmCodesRepository.IsExistsAsync(accountId))
+            await _confirmCodesRepository.DeleteAsync(accountId);
 
         string code = _emailConfirmCodeProvider.Generate();
-        await _accountsRepository.AddConfirmCodeAsync(accountId, code);
+        await _confirmCodesRepository.InsertAsync(accountId, code);
 
         UserView userView = await _usersClient.SendGetRequestAsync(userId: accountId);
 
@@ -101,7 +105,7 @@ public class AccountsService
         if (account.IsEmailConfirm)
             throw new BadRequestException("Email already confirm");
 
-        string trueConfirmCode = await _accountsRepository.GetConfirmCodeByIdAsync(accountId)
+        string trueConfirmCode = await _confirmCodesRepository.GetByAccountIdAsync(accountId)
                                  ?? throw new BadRequestException("Account didn't request for confirm code");
 
         if (confirmCode != trueConfirmCode)
@@ -109,7 +113,7 @@ public class AccountsService
 
         account.IsEmailConfirm = true;
         await _accountsRepository.UpdateAsync(account);
-        await _accountsRepository.DeleteConfirmCodeAsync(account.Id);
+        await _confirmCodesRepository.DeleteAsync(account.Id);
     }
 
     public async Task ChangeEmailAsync(ChangeEmail changeEmail, Guid accountId)

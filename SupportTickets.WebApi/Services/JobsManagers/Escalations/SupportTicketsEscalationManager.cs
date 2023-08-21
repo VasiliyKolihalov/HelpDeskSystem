@@ -4,22 +4,25 @@ using Hangfire.Storage.Monitoring;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Repositories.SupportTickets;
 
-namespace SupportTickets.WebApi.Services.JobsManagers;
+namespace SupportTickets.WebApi.Services.JobsManagers.Escalations;
 
-public class EscalationsManager : IEscalationsManager
+public class SupportTicketsEscalationManager : ISupportTicketsEscalationManager
 {
-    private readonly ISupportTicketsRepository _supportTicketsRepository;
     private readonly IBackgroundJobClient _jobClient;
+    private readonly ISupportTicketsRepository _supportTicketsRepository;
+    private readonly Dictionary<Guid, string> _jobIds = new();
 
-    public EscalationsManager(ISupportTicketsRepository supportTicketsRepository, IBackgroundJobClient jobClient)
+    public SupportTicketsEscalationManager(
+        IBackgroundJobClient jobClient,
+        ISupportTicketsRepository supportTicketsRepository)
     {
-        _supportTicketsRepository = supportTicketsRepository;
         _jobClient = jobClient;
+        _supportTicketsRepository = supportTicketsRepository;
     }
 
     public void AssignEscalationFor(Guid supportTicketId, TimeSpan afterTime)
     {
-        _jobClient.Schedule(() => EscalateAsync(supportTicketId), afterTime);
+        _jobIds[supportTicketId] = _jobClient.Schedule(() => EscalateAsync(supportTicketId), afterTime);
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -27,6 +30,10 @@ public class EscalationsManager : IEscalationsManager
     public async Task EscalateAsync(Guid supportTicketId)
     {
         SupportTicket supportTicket = (await _supportTicketsRepository.GetByIdAsync(supportTicketId))!;
+        
+        if(supportTicket.Status == SupportTicketStatus.Close)
+            return;
+        
         supportTicket.Agent = default;
         supportTicket.Priority = supportTicket.Priority switch
         {

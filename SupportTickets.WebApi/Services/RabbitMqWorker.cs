@@ -1,6 +1,7 @@
 ﻿using Infrastructure.Services.Messaging;
 using Newtonsoft.Json;
 using SupportTickets.WebApi.Models.Users;
+using SupportTickets.WebApi.Services.Users;
 
 namespace SupportTickets.WebApi.Services;
 

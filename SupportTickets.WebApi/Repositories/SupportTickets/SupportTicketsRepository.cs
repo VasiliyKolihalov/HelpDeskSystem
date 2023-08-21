@@ -240,7 +240,7 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         });
         return tickets;
     }
-
+    
     private static SupportTicket MapSupportTicketQuery(SupportTicket supportTicket, User user, User agent)
     {
         supportTicket.User = user;
@@ -248,101 +248,9 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         return supportTicket;
     }
 
-    public async Task<Message?> GetMessageByIdAsync(Guid messageId)
-    {
-        const string query = "select * from Messages " +
-                             "inner join Users users on Messages.UserId = users.Id " +
-                             "where Messages.Id = @messageId";
-
-        Message? message = null;
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            message = (await transaction.QueryAsync<Message, User, Message>(
-                sql: query,
-                map: MapMessagesQuery,
-                param: new { messageId })).FirstOrDefault();
-        });
-        return message;
-    }
-
     private static Message MapMessagesQuery(Message message, User user)
     {
         message.User = user;
         return message;
-    }
-
-
-    public async Task AddMessageAsync(Message message)
-    {
-        const string query = "insert into Messages values (@Id, @SupportTicketId, @UserId, @Content)";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            var param = new { message.Id, message.SupportTicketId, UserId = message.User.Id, message.Content };
-            await transaction.ExecuteAsync(query, param);
-        });
-    }
-
-    public async Task UpdateMessageAsync(Message message)
-    {
-        const string query = "update Messages set Content = @Content where Id = @Id";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction => await transaction.ExecuteAsync(query, message));
-    }
-
-    public async Task DeleteMessageAsync(Guid messageId)
-    {
-        const string query = "delete from Messages where Id = @messageId";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            await transaction.ExecuteAsync(query, param: new { messageId });
-        });
-    }
-
-    public async Task<IEnumerable<User>> GetAgentsHistoryAsync(Guid supportTicketId)
-    {
-        const string query = "select * from Users " +
-                             "inner join SupportTicketsAgents agents on Users.Id = agents.AgentId " +
-                             "where agents.SupportTicketId = @supportTicketId";
-        IEnumerable<User> users = null!;
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            users = await transaction.QueryAsync<User>(query, param: new { supportTicketId });
-        });
-        return users;
-    }
-
-    public async Task AddToAgentsHistoryAsync(Guid supportTicketId, Guid userId)
-    {
-        const string query = "insert into SupportTicketsAgents values (@supportTicketId, @userId)";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            await transaction.QueryAsync<User>(query, param: new { supportTicketId, userId });
-        });
-    }
-
-    public async Task AddSolutionAsync(Solution solution)
-    {
-        const string query = "insert into Solutions values (@MessageId, @Status)";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            var param = new { solution.MessageId, Status = solution.Status.ToString() };
-            await transaction.ExecuteAsync(query, param);
-        });
-    }
-
-    public async Task UpdateSolutionAsync(Solution solution)
-    {
-        const string query = "update Solutions set Status = @Status where MessageId = @MessageId";
-        await using DbConnection connection = _dbContext.CreateConnection();
-        await connection.ExecuteTransactionAsync(async transaction =>
-        {
-            await transaction.ExecuteAsync(query, new { solution.MessageId, Status = solution.Status.ToString() });
-        });
     }
 }

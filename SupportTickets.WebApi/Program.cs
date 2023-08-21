@@ -8,10 +8,15 @@ using Infrastructure.Middlewares;
 using Infrastructure.Services.Persistence;
 using SupportTickets.WebApi.Constants;
 using SupportTickets.WebApi.Filters;
+using SupportTickets.WebApi.Repositories.AgentsSupportTicketsHistory;
+using SupportTickets.WebApi.Repositories.Messages;
+using SupportTickets.WebApi.Repositories.Solutions;
 using SupportTickets.WebApi.Repositories.SupportTickets;
 using SupportTickets.WebApi.Repositories.Users;
 using SupportTickets.WebApi.Services;
-using SupportTickets.WebApi.Services.JobsManagers;
+using SupportTickets.WebApi.Services.JobsManagers.Closing;
+using SupportTickets.WebApi.Services.JobsManagers.Escalations;
+using SupportTickets.WebApi.Services.Users;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 ConfigureServices(builder);
@@ -30,6 +35,9 @@ static void ConfigureServices(WebApplicationBuilder builder)
             masterConnectionString: builder.Configuration.GetRequiredConnectionString("Master")))
         .AddFluentMigrationForPostgres(connectionString, Assembly.GetExecutingAssembly())
         .AddTransient<ISupportTicketsRepository, SupportTicketsRepository>()
+        .AddTransient<IMessagesRepository, MessagesRepository>()
+        .AddTransient<ISolutionsRepository, SolutionsRepository>()
+        .AddTransient<IAgentsSupportTicketsHistoryRepository, AgentsSupportTicketsHistoryRepository>()
         .AddTransient<IUsersRepository, UsersRepository>();
 
     builder.Services.AddHangfire(options => { options.UsePostgreSqlStorage(connectionString); });
@@ -40,7 +48,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
         .AddAutoMapper(typeof(Program))
         .AddTransient<IUsersService, UsersService>()
         .AddHostedService<RabbitMqWorker>()
-        .AddTransient<IEscalationsManager, EscalationsManager>()
+        .AddTransient<ISupportTicketsEscalationManager, SupportTicketsEscalationManager>()
+        .AddTransient<ISupportTicketsClosingManager, SupportTicketsClosingManager>()
         .AddTransient<SupportTicketsService>();
 
     IConfigurationSection jwtAuthSection = builder.Configuration.GetRequiredSection("JwtAuthOptions");

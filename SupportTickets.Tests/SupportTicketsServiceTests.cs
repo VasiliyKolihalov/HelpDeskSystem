@@ -6,30 +6,46 @@ using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
+using SupportTickets.WebApi.Repositories.AgentsSupportTicketsHistory;
+using SupportTickets.WebApi.Repositories.Messages;
+using SupportTickets.WebApi.Repositories.Solutions;
 using SupportTickets.WebApi.Repositories.SupportTickets;
 using SupportTickets.WebApi.Services;
-using SupportTickets.WebApi.Services.JobsManagers;
+using SupportTickets.WebApi.Services.JobsManagers.Closing;
+using SupportTickets.WebApi.Services.JobsManagers.Escalations;
 using Message = SupportTickets.WebApi.Models.Messages.Message;
 
 namespace SupportTickets.Tests;
 
 public class Tests
 {
-    private Mock<ISupportTicketsRepository> _supportTicketsRepository = null!;
-    private Mock<IEscalationsManager> _escalationsManager = null!;
-    private Mock<IMapper> _mapper = null!;
+    private Mock<ISupportTicketsRepository> _supportTicketsRepository;
+    private Mock<IMessagesRepository> _messagesRepository;
+    private Mock<ISolutionsRepository> _solutionsRepository;
+    private Mock<IAgentsSupportTicketsHistoryRepository> _agentsHistoryRepository;
+    private Mock<ISupportTicketsEscalationManager> _escalationManager;
+    private Mock<ISupportTicketsClosingManager> _closingManager;
+    private Mock<IMapper> _mapper;
     private SupportTicketsService _supportTicketsService = null!;
 
     [SetUp]
     public void Setup()
     {
         _supportTicketsRepository = new Mock<ISupportTicketsRepository>();
-        _escalationsManager = new Mock<IEscalationsManager>();
+        _messagesRepository = new Mock<IMessagesRepository>();
+        _solutionsRepository = new Mock<ISolutionsRepository>();
+        _agentsHistoryRepository = new Mock<IAgentsSupportTicketsHistoryRepository>();
+        _escalationManager = new Mock<ISupportTicketsEscalationManager>();
+        _closingManager = new Mock<ISupportTicketsClosingManager>();
         _mapper = new Mock<IMapper>();
 
         _supportTicketsService = new SupportTicketsService(
             _supportTicketsRepository.Object,
-            _escalationsManager.Object,
+            _messagesRepository.Object,
+            _solutionsRepository.Object,
+            _agentsHistoryRepository.Object,
+            _escalationManager.Object,
+            _closingManager.Object,
             _mapper.Object);
     }
 
@@ -58,13 +74,14 @@ public class Tests
         _supportTicketsRepository.Setup(_ => _.GetAllWithoutAgent()).ReturnsAsync(supportTickets);
 
         Guid supportTicketIdWhereAccountWasNotAgent = supportTickets.First().Id;
-        _supportTicketsRepository
-            .Setup(_ => _.GetAgentsHistoryAsync(supportTicketIdWhereAccountWasNotAgent))
+        _agentsHistoryRepository
+            .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketIdWhereAccountWasNotAgent))
             .ReturnsAsync(Array.Empty<User>());
 
         var formerAgents = new[] { new User { Id = accountId } };
-        _supportTicketsRepository
-            .Setup(repository => repository.GetAgentsHistoryAsync(It.IsNotIn(supportTicketIdWhereAccountWasNotAgent)))
+        _agentsHistoryRepository
+            .Setup(repository =>
+                repository.GetBySupportTicketIdAsync(It.IsNotIn(supportTicketIdWhereAccountWasNotAgent)))
             .ReturnsAsync(formerAgents);
 
         // Act
@@ -73,8 +90,11 @@ public class Tests
         // Assert
         result.Should().NotBeNull();
         _supportTicketsRepository.Verify(_ => _.GetAllWithoutAgent(), Once);
-        _supportTicketsRepository.Verify(_ => _.GetAgentsHistoryAsync(It.IsAny<Guid>()), Exactly(supportTickets.Count));
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _agentsHistoryRepository.Verify(
+            expression: _ => _.GetBySupportTicketIdAsync(It.IsAny<Guid>()),
+            times: Exactly(supportTickets.Count));
+        _agentsHistoryRepository.VerifyNoOtherCalls();
         _mapper.Verify(
             expression: mapper => mapper.Map<IEnumerable<SupportTicketPreview>>(
                 It.Is<IEnumerable<SupportTicket>>(_ =>
@@ -184,7 +204,8 @@ public class Tests
         var supportTicket = new SupportTicket
         {
             User = new User { Id = account.Id },
-            Status = SupportTicketStatus.Open
+            Status = SupportTicketStatus.Open,
+            Solutions = Array.Empty<Solution>()
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketUpdate.Id)).ReturnsAsync(supportTicket);
         var updatedSupportTicket = new SupportTicket();
@@ -201,6 +222,7 @@ public class Tests
         _supportTicketsRepository.VerifyNoOtherCalls();
     }
 
+
     [Test, AutoData]
     public async Task UpdateAsync_SupportTicketNotExists_Throw(SupportTicketUpdate supportTicketUpdate)
     {
@@ -216,24 +238,6 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task UpdateAsync_SupportTicketNotOpen_Throw(SupportTicketUpdate supportTicketUpdate)
-    {
-        // Arrange
-        var supportTicket = new SupportTicket { Status = SupportTicketStatus.Close };
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketUpdate.Id)).ReturnsAsync(supportTicket);
-
-        // Act
-        Func<Task> action = async () => await _supportTicketsService
-            .UpdateAsync(supportTicketUpdate, It.IsAny<Account<Guid>>());
-
-        // Assert
-        await action
-            .Should()
-            .ThrowAsync<BadRequestException>()
-            .WithMessage($"SupportTicket with id: {supportTicketUpdate.Id} not open");
-    }
-
-    [Test, AutoData]
     public async Task UpdateAsync_AccountIsNotRelated_Throw(
         SupportTicketUpdate supportTicketUpdate,
         Account<Guid> account)
@@ -241,8 +245,7 @@ public class Tests
         // Arrange
         var supportTicket = new SupportTicket
         {
-            User = new User(),
-            Status = SupportTicketStatus.Open
+            User = new User()
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketUpdate.Id)).ReturnsAsync(supportTicket);
 
@@ -251,6 +254,55 @@ public class Tests
 
         // Result
         await action.Should().ThrowAsync<UnauthorizedException>();
+    }
+
+    [Test, AutoData]
+    public async Task UpdateAsync_SupportTicketNotOpen_Throw(
+        SupportTicketUpdate supportTicketUpdate,
+        Account<Guid> account)
+    {
+        // Arrange
+        var supportTicket = new SupportTicket
+        {
+            User = new User { Id = account.Id },
+            Status = SupportTicketStatus.Close
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketUpdate.Id)).ReturnsAsync(supportTicket);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService
+            .UpdateAsync(supportTicketUpdate, account);
+
+        // Assert
+        await action
+            .Should()
+            .ThrowAsync<BadRequestException>()
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} not open");
+    }
+
+    [Test, AutoData]
+    public async Task UpdateAsync_SupportTicketHaveSuggestedSolution_Throw(
+        SupportTicketUpdate supportTicketUpdate,
+        Account<Guid> account)
+    {
+        // Arrange
+        var supportTicket = new SupportTicket
+        {
+            User = new User { Id = account.Id },
+            Status = SupportTicketStatus.Open,
+            Solutions = new[] { new Solution { Status = SolutionStatus.Suggested } }
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketUpdate.Id)).ReturnsAsync(supportTicket);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService
+            .UpdateAsync(supportTicketUpdate, account);
+
+        // Assert
+        await action
+            .Should()
+            .ThrowAsync<BadRequestException>()
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} have suggested solution");
     }
 
     [Test, AutoData]
@@ -282,79 +334,14 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task CloseAsync_CorrectCase_Pass(Guid supportTicketId, Account<Guid> account)
-    {
-        // Arrange
-        var supportTicketFromRepository = new SupportTicket
-        {
-            Status = SupportTicketStatus.Open,
-            Agent = new User { Id = account.Id }
-        };
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicketFromRepository);
-
-        // Act
-        await _supportTicketsService.CloseAsync(supportTicketId, account);
-
-        // Assert
-        _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicketId), Once);
-        _supportTicketsRepository.Verify(
-            expression: repository =>
-                repository.UpdateAsync(It.Is<SupportTicket>(supportTicket =>
-                    supportTicket == supportTicketFromRepository &&
-                    supportTicket.Status == SupportTicketStatus.Close)),
-            times: Once);
-        _supportTicketsRepository.VerifyNoOtherCalls();
-        _escalationsManager.Verify(_ => _.CancelEscalationFor(supportTicketId));
-        _escalationsManager.VerifyNoOtherCalls();
-    }
-
-    [Test, AutoData]
-    public async Task CloseAsync_AccountIsNotRelated_Throw(Guid supportTicketId, Account<Guid> account)
-    {
-        // Arrange
-        var supportTicket = new SupportTicket
-        {
-            Status = SupportTicketStatus.Open
-        };
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicket);
-
-        // Act
-        Func<Task> action = async () => await _supportTicketsService.CloseAsync(supportTicketId, account);
-
-        // Assert
-        await action.Should().ThrowAsync<UnauthorizedException>();
-    }
-
-    [Test, AutoData]
-    public async Task CloseAsync_SupportTicketNotOpen_Throw(Guid supportTicketId, Account<Guid> account)
-    {
-        // Arrange
-        var supportTicket = new SupportTicket
-        {
-            Status = SupportTicketStatus.Close,
-            Agent = new User { Id = account.Id }
-        };
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicket);
-
-        // Act
-        Func<Task> action = async () => await _supportTicketsService.CloseAsync(supportTicketId, account);
-
-        // Assert
-        await action
-            .Should()
-            .ThrowAsync<BadRequestException>()
-            .WithMessage($"SupportTicket with id: {supportTicketId} not open");
-    }
-
-    [Test, AutoData]
     public async Task AppointAgentAsync_CorrectCase_Pass(Guid supportTicketId, Account<Guid> account)
     {
         // Arrange
         var supportTicketFromRepository = new SupportTicket();
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId))
             .ReturnsAsync(supportTicketFromRepository);
-        _supportTicketsRepository
-            .Setup(_ => _.GetAgentsHistoryAsync(supportTicketId))
+        _agentsHistoryRepository
+            .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketId))
             .ReturnsAsync(Array.Empty<User>());
         var user = new User();
         _mapper.Setup(_ => _.Map<User>(account)).Returns(user);
@@ -364,7 +351,6 @@ public class Tests
 
         // Assert
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicketId), Once);
-        _supportTicketsRepository.Verify(_ => _.GetAgentsHistoryAsync(supportTicketId), Once);
         _supportTicketsRepository.Verify(
             expression: repository =>
                 repository.UpdateAsync(It.Is<SupportTicket>(supportTicket =>
@@ -372,10 +358,12 @@ public class Tests
                     supportTicket.Priority == SupportTicketPriority.Low &&
                     supportTicket.Agent == user)),
             times: Once);
-        _supportTicketsRepository.Verify(_ => _.AddToAgentsHistoryAsync(supportTicketId, account.Id), Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
-        _escalationsManager.Verify(_ => _.AssignEscalationFor(supportTicketId, TimeSpan.FromDays(7)), Once);
-        _escalationsManager.VerifyNoOtherCalls();
+        _agentsHistoryRepository.Verify(_ => _.GetBySupportTicketIdAsync(supportTicketId), Once);
+        _agentsHistoryRepository.Verify(_ => _.InsertAsync(supportTicketId, account.Id), Once);
+        _agentsHistoryRepository.VerifyNoOtherCalls();
+        _escalationManager.Verify(_ => _.AssignEscalationFor(supportTicketId, TimeSpan.FromDays(7)), Once);
+        _escalationManager.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<User>(account), Once);
         _mapper.VerifyNoOtherCalls();
     }
@@ -411,7 +399,7 @@ public class Tests
         await action
             .Should()
             .ThrowAsync<BadRequestException>()
-            .WithMessage($"SupportTicket with id: {supportTicketId} not open");
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} not open");
     }
 
     [Test, AutoData]
@@ -445,8 +433,8 @@ public class Tests
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId))
             .ReturnsAsync(supportTicketFromRepository);
         var formerAgents = new[] { new User { Id = account.Id } };
-        _supportTicketsRepository
-            .Setup(_ => _.GetAgentsHistoryAsync(supportTicketId))
+        _agentsHistoryRepository
+            .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketId))
             .ReturnsAsync(formerAgents);
 
         // Act
@@ -461,7 +449,7 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task AddMessageAsync_CorrectCase_Pass(MessageCreate messageCreate, Account<Guid> account)
+    public async Task AddMessageAsync_UserAccount_Pass(MessageCreate messageCreate, Account<Guid> account)
     {
         // Arrange
         var messageFromMapper = new Message();
@@ -482,12 +470,50 @@ public class Tests
         // Assert
         result.Should().NotBeEmpty();
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(messageCreate.SupportTicketId), Once);
-        _supportTicketsRepository.Verify(repository =>
-                repository.AddMessageAsync(It.Is<Message>(message =>
+        _messagesRepository.Verify(repository =>
+                repository.InsertAsync(It.Is<Message>(message =>
                     message == messageFromMapper &&
                     message.User.Id == account.Id)),
             times: Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _closingManager.Verify(_ => _.EnsureCancelCloseFor(messageCreate.SupportTicketId), Once);
+        _closingManager.VerifyNoOtherCalls();
+        _mapper.Verify(_ => _.Map<Message>(messageCreate), Once);
+        _mapper.Verify(_ => _.Map<User>(account), Once);
+        _mapper.VerifyNoOtherCalls();
+    }
+
+    [Test, AutoData]
+    public async Task AddMessageAsync_AgentAccount_Pass(MessageCreate messageCreate, Account<Guid> account)
+    {
+        // Arrange
+        var messageFromMapper = new Message();
+        _mapper.Setup(_ => _.Map<Message>(messageCreate)).Returns(messageFromMapper);
+        var user = new User { Id = account.Id };
+        _mapper.Setup(_ => _.Map<User>(account)).Returns(user);
+        var supportTicket = new SupportTicket
+        {
+            User = new User(),
+            Agent = user,
+            Status = SupportTicketStatus.Open
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(messageCreate.SupportTicketId))
+            .ReturnsAsync(supportTicket);
+
+        // Act
+        Guid result = await _supportTicketsService.AddMessageAsync(messageCreate, account);
+
+        // Assert
+        result.Should().NotBeEmpty();
+        _supportTicketsRepository.Verify(_ => _.GetByIdAsync(messageCreate.SupportTicketId), Once);
+        _messagesRepository.Verify(repository =>
+                repository.InsertAsync(It.Is<Message>(message =>
+                    message == messageFromMapper &&
+                    message.User.Id == account.Id)),
+            times: Once);
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _closingManager.Verify(_ => _.EnsureAssignCloseFor(messageCreate.SupportTicketId, TimeSpan.FromDays(2)), Once);
+        _closingManager.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<Message>(messageCreate), Once);
         _mapper.Verify(_ => _.Map<User>(account), Once);
         _mapper.VerifyNoOtherCalls();
@@ -509,29 +535,6 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task AddMessageAsync_SupportTicketNotOpen_Throw(
-        MessageCreate messageCreate,
-        Account<Guid> account)
-    {
-        // Arrange
-        var supportTicket = new SupportTicket
-        {
-            Status = SupportTicketStatus.Close
-        };
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(messageCreate.SupportTicketId))
-            .ReturnsAsync(supportTicket);
-
-        // Act
-        Func<Task> action = async () => await _supportTicketsService.AddMessageAsync(messageCreate, account);
-
-        // Assert
-        await action
-            .Should()
-            .ThrowAsync<BadRequestException>()
-            .WithMessage($"SupportTicket with id: {messageCreate.SupportTicketId} not open");
-    }
-
-    [Test, AutoData]
     public async Task AddMessageAsync_AccountIsNotRelated_Throw(
         MessageCreate messageCreate,
         Account<Guid> account)
@@ -539,8 +542,7 @@ public class Tests
         // Arrange
         var supportTicket = new SupportTicket
         {
-            User = new User(),
-            Status = SupportTicketStatus.Open
+            User = new User()
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(messageCreate.SupportTicketId))
             .ReturnsAsync(supportTicket);
@@ -553,19 +555,45 @@ public class Tests
     }
 
     [Test, AutoData]
+    public async Task AddMessageAsync_SupportTicketNotOpen_Throw(
+        MessageCreate messageCreate,
+        Account<Guid> account)
+    {
+        // Arrange
+        var supportTicket = new SupportTicket
+        {
+            User = new User { Id = account.Id },
+            Status = SupportTicketStatus.Close
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(messageCreate.SupportTicketId))
+            .ReturnsAsync(supportTicket);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService.AddMessageAsync(messageCreate, account);
+
+        // Assert
+        await action
+            .Should()
+            .ThrowAsync<BadRequestException>()
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} not open");
+    }
+
+
+    [Test, AutoData]
     public async Task UpdateMessageAsync_CorrectCase_Pass(MessageUpdate messageUpdate, Guid accountId)
     {
         // Arrange
         var supportTicket = new SupportTicket
         {
-            Status = SupportTicketStatus.Open
+            Status = SupportTicketStatus.Open,
+            Solutions = Array.Empty<Solution>()
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicket.Id)).ReturnsAsync(supportTicket);
         var message = new Message
         {
             User = new User { Id = accountId }
         };
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(messageUpdate.Id)).ReturnsAsync(message);
+        _messagesRepository.Setup(_ => _.GetByIdAsync(messageUpdate.Id)).ReturnsAsync(message);
         var updatedMessage = new Message();
         _mapper.Setup(_ => _.Map<Message>(messageUpdate)).Returns(updatedMessage);
 
@@ -575,15 +603,16 @@ public class Tests
 
         // Assert
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicket.Id), Once);
-        _supportTicketsRepository.Verify(_ => _.GetMessageByIdAsync(messageUpdate.Id), Once);
-        _supportTicketsRepository.Verify(_ => _.UpdateMessageAsync(updatedMessage), Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _messagesRepository.Verify(_ => _.GetByIdAsync(messageUpdate.Id), Once);
+        _messagesRepository.Verify(_ => _.UpdateAsync(updatedMessage), Once);
+        _messagesRepository.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<Message>(messageUpdate), Once);
         _mapper.VerifyNoOtherCalls();
     }
 
     [Test, AutoData]
-    public async Task UpdateMessageAsync_SupportTicketNotExists_Throw(MessageUpdate messageUpdate, Guid accountId)
+    public async Task UpdateMessageAsync_MessageNotExists_Throw(MessageUpdate messageUpdate, Guid accountId)
     {
         // Act
         Func<Task> action = async () => await _supportTicketsService.UpdateMessageAsync(messageUpdate, accountId);
@@ -596,6 +625,27 @@ public class Tests
     }
 
     [Test, AutoData]
+    public async Task UpdateMessageAsync_AccountIsNotRelated_Throw(MessageUpdate messageUpdate, Guid accountId)
+    {
+        // Arrange
+        var message = new Message
+        {
+            User = new User()
+        };
+        _messagesRepository
+            .Setup(_ => _.GetByIdAsync(messageUpdate.Id))
+            .ReturnsAsync(message);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService.UpdateMessageAsync(messageUpdate, accountId);
+
+        // Assert
+        await action
+            .Should()
+            .ThrowAsync<UnauthorizedException>();
+    }
+
+    [Test, AutoData]
     public async Task UpdateMessageAsync_SupportTicketNotOpen_Throw(MessageUpdate messageUpdate, Guid accountId)
     {
         // Arrange
@@ -604,8 +654,11 @@ public class Tests
             Status = SupportTicketStatus.Close
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicket.Id)).ReturnsAsync(supportTicket);
-        var message = new Message();
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(messageUpdate.Id))
+        var message = new Message
+        {
+            User = new User { Id = accountId },
+        };
+        _messagesRepository.Setup(_ => _.GetByIdAsync(messageUpdate.Id))
             .ReturnsAsync(message);
 
         // Act
@@ -619,19 +672,22 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task UpdateMessageAsync_AccountIsNotRelated_Throw(MessageUpdate messageUpdate, Guid accountId)
+    public async Task UpdateMessageAsync_SupportTicketHaveSuggestedSolution_Throw(
+        MessageUpdate messageUpdate,
+        Guid accountId)
     {
         // Arrange
         var supportTicket = new SupportTicket
         {
-            Status = SupportTicketStatus.Open
+            Status = SupportTicketStatus.Open,
+            Solutions = new[] { new Solution { Status = SolutionStatus.Suggested } }
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicket.Id)).ReturnsAsync(supportTicket);
         var message = new Message
         {
-            User = new User()
+            User = new User { Id = accountId },
         };
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(messageUpdate.Id))
+        _messagesRepository.Setup(_ => _.GetByIdAsync(messageUpdate.Id))
             .ReturnsAsync(message);
 
         // Act
@@ -640,7 +696,8 @@ public class Tests
         // Assert
         await action
             .Should()
-            .ThrowAsync<UnauthorizedException>();
+            .ThrowAsync<BadRequestException>()
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} have suggested solution");
     }
 
     [Test, AutoData]
@@ -649,14 +706,16 @@ public class Tests
         // Arrange
         var supportTicket = new SupportTicket
         {
-            Status = SupportTicketStatus.Open
+            Status = SupportTicketStatus.Open,
+            Solutions = Array.Empty<Solution>()
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicket.Id)).ReturnsAsync(supportTicket);
         var message = new Message
         {
             User = new User { Id = accountId }
         };
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(messageId))
+        _messagesRepository
+            .Setup(_ => _.GetByIdAsync(messageId))
             .ReturnsAsync(message);
 
         // Act
@@ -664,13 +723,14 @@ public class Tests
 
         // Assert
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicket.Id), Once);
-        _supportTicketsRepository.Verify(_ => _.GetMessageByIdAsync(messageId), Once);
-        _supportTicketsRepository.Verify(_ => _.DeleteMessageAsync(messageId), Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _messagesRepository.Verify(_ => _.GetByIdAsync(messageId), Once);
+        _messagesRepository.Verify(_ => _.DeleteAsync(messageId), Once);
+        _messagesRepository.VerifyNoOtherCalls();
     }
 
     [Test, AutoData]
-    public async Task DeleteMessageAsync_SupportTicketNotExists_Throw(Guid messageId, Guid accountId)
+    public async Task DeleteMessageAsync_MessageNotExists_Throw(Guid messageId, Guid accountId)
     {
         // Act
         Func<Task> action = async () => await _supportTicketsService.DeleteMessageAsync(messageId, accountId);
@@ -683,6 +743,26 @@ public class Tests
     }
 
     [Test, AutoData]
+    public async Task DeleteMessageAsync_AccountIsNotRelated_Throw(Guid messageId, Guid accountId)
+    {
+        // Arrange
+        var message = new Message
+        {
+            User = new User()
+        };
+        _messagesRepository.Setup(_ => _.GetByIdAsync(messageId))
+            .ReturnsAsync(message);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService.DeleteMessageAsync(messageId, accountId);
+
+        // Assert
+        await action
+            .Should()
+            .ThrowAsync<UnauthorizedException>();
+    }
+
+    [Test, AutoData]
     public async Task DeleteMessageAsync_SupportTicketNotOpen_Throw(Guid messageId, Guid accountId)
     {
         // Arrange
@@ -691,8 +771,12 @@ public class Tests
             Status = SupportTicketStatus.Close
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicket.Id)).ReturnsAsync(supportTicket);
-        var message = new Message();
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(messageId))
+        var message = new Message
+        {
+            User = new User { Id = accountId }
+        };
+        _messagesRepository
+            .Setup(_ => _.GetByIdAsync(messageId))
             .ReturnsAsync(message);
 
         // Act
@@ -706,19 +790,21 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task DeleteMessageAsync_AccountIsNotRelated_Throw(Guid messageId, Guid accountId)
+    public async Task DeleteMessageAsync_SupportTicketHaveSuggestedSolution_Throw(Guid messageId, Guid accountId)
     {
         // Arrange
         var supportTicket = new SupportTicket
         {
-            Status = SupportTicketStatus.Open
+            Status = SupportTicketStatus.Open,
+            Solutions = new[] { new Solution { Status = SolutionStatus.Suggested } }
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicket.Id)).ReturnsAsync(supportTicket);
         var message = new Message
         {
-            User = new User()
+            User = new User { Id = accountId }
         };
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(messageId))
+        _messagesRepository
+            .Setup(_ => _.GetByIdAsync(messageId))
             .ReturnsAsync(message);
 
         // Act
@@ -727,7 +813,8 @@ public class Tests
         // Assert
         await action
             .Should()
-            .ThrowAsync<UnauthorizedException>();
+            .ThrowAsync<BadRequestException>()
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} have suggested solution");
     }
 
     [Test, AutoData]
@@ -735,7 +822,7 @@ public class Tests
     {
         // Arrange
         var message = new Message();
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
+        _messagesRepository.Setup(_ => _.GetByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
         var supportTicket = new SupportTicket
         {
             Agent = new User
@@ -753,14 +840,17 @@ public class Tests
         await _supportTicketsService.SuggestSolutionAsync(solutionSuggest, accountId);
 
         // Assert
-        _supportTicketsRepository.Verify(_ => _.GetMessageByIdAsync(solutionSuggest.MessageId), Once);
+        _messagesRepository.Verify(_ => _.GetByIdAsync(solutionSuggest.MessageId), Once);
+        _messagesRepository.VerifyNoOtherCalls();
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(message.SupportTicketId), Once);
-        _supportTicketsRepository.Verify(
-            expression: _ => _.AddSolutionAsync(It.Is<Solution>(solution =>
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _solutionsRepository.Verify(
+            expression: _ => _.InsertAsync(It.Is<Solution>(solution =>
                 solution == solutionFromMapper &&
                 solution.Status == SolutionStatus.Suggested)),
             times: Once);
-        _supportTicketsRepository.VerifyNoOtherCalls();
+        _solutionsRepository.VerifyNoOtherCalls();
+        _closingManager.Verify(_ => _.EnsureAssignCloseFor(message.SupportTicketId, TimeSpan.FromDays(2)), Once);
         _mapper.Verify(_ => _.Map<Solution>(solutionSuggest));
         _mapper.VerifyNoOtherCalls();
     }
@@ -779,13 +869,33 @@ public class Tests
     }
 
     [Test, AutoData]
+    public async Task SuggestSolutionAsync_AccountIsNotAgent_Throw(SolutionSuggest solutionSuggest, Guid accountId)
+    {
+        // Arrange
+        var message = new Message();
+        _messagesRepository.Setup(_ => _.GetByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
+        var supportTicket = new SupportTicket
+        {
+            Status = SupportTicketStatus.Open
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(message.SupportTicketId)).ReturnsAsync(supportTicket);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService.SuggestSolutionAsync(solutionSuggest, accountId);
+
+        // Assert
+        await action.Should().ThrowAsync<UnauthorizedException>();
+    }
+
+    [Test, AutoData]
     public async Task SuggestSolutionAsync_SupportTicketNotOpen_Throw(SolutionSuggest solutionSuggest, Guid accountId)
     {
         // Arrange
         var message = new Message();
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
+        _messagesRepository.Setup(_ => _.GetByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
         var supportTicket = new SupportTicket
         {
+            Agent = new User { Id = accountId },
             Status = SupportTicketStatus.Close
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(message.SupportTicketId)).ReturnsAsync(supportTicket);
@@ -801,31 +911,12 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task SuggestSolutionAsync_AccountIsNotAgent_Throw(SolutionSuggest solutionSuggest, Guid accountId)
-    {
-        // Arrange
-        var message = new Message();
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
-        var supportTicket = new SupportTicket
-        {
-            Status = SupportTicketStatus.Open
-        };
-        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(message.SupportTicketId)).ReturnsAsync(supportTicket);
-
-        // Act
-        Func<Task> action = async () => await _supportTicketsService.SuggestSolutionAsync(solutionSuggest, accountId);
-
-        // Assert
-        await action.Should().ThrowAsync<UnauthorizedException>();
-    }
-
-    [Test, AutoData]
-    public async Task SuggestSolutionAsync_ExistsSuggestedSolution_Throw(SolutionSuggest solutionSuggest,
+    public async Task SuggestSolutionAsync_SupportTicketHaveSuggestedSolution_Throw(SolutionSuggest solutionSuggest,
         Guid accountId)
     {
         // Arrange
         var message = new Message();
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
+        _messagesRepository.Setup(_ => _.GetByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
         var supportTicket = new SupportTicket
         {
             Agent = new User
@@ -844,7 +935,7 @@ public class Tests
         await action
             .Should()
             .ThrowAsync<BadRequestException>()
-            .WithMessage("Exists solution which already suggested");
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} have suggested solution");
     }
 
     [Test, AutoData]
@@ -853,7 +944,7 @@ public class Tests
     {
         // Arrange
         var message = new Message();
-        _supportTicketsRepository.Setup(_ => _.GetMessageByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
+        _messagesRepository.Setup(_ => _.GetByIdAsync(solutionSuggest.MessageId)).ReturnsAsync(message);
         var supportTicket = new SupportTicket
         {
             Agent = new User
@@ -897,16 +988,19 @@ public class Tests
         // Assert
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicketId), Once);
         _supportTicketsRepository.Verify(
-            expression: _ => _.UpdateSolutionAsync(It.Is<Solution>(solution =>
-                solution == solutionFromRepository && solution.Status == SolutionStatus.Accepted)),
-            times: Once);
-        _supportTicketsRepository.Verify(
             expression: _ => _.UpdateAsync(It.Is<SupportTicket>(supportTicket =>
                 supportTicket == supportTicketFromRepository && supportTicket.Status == SupportTicketStatus.Solved)),
             times: Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
-        _escalationsManager.Verify(_ => _.CancelEscalationFor(supportTicketId));
-        _escalationsManager.VerifyNoOtherCalls();
+        _solutionsRepository.Verify(
+            expression: _ => _.UpdateAsync(It.Is<Solution>(solution =>
+                solution == solutionFromRepository && solution.Status == SolutionStatus.Accepted)),
+            times: Once);
+        _solutionsRepository.VerifyNoOtherCalls();
+        _escalationManager.Verify(_ => _.CancelEscalationFor(supportTicketId), Once);
+        _escalationManager.VerifyNoOtherCalls();
+        _closingManager.Verify(_ => _.EnsureCancelCloseFor(supportTicketId), Once);
+        _escalationManager.VerifyNoOtherCalls();
     }
 
     [Test, AutoData]
@@ -980,11 +1074,14 @@ public class Tests
 
         // Assert
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicketId), Once);
-        _supportTicketsRepository.Verify(
-            expression: _ => _.UpdateSolutionAsync(It.Is<Solution>(solution =>
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _solutionsRepository.Verify(
+            expression: _ => _.UpdateAsync(It.Is<Solution>(solution =>
                 solution == solutionFromRepository && solution.Status == SolutionStatus.Rejected)),
             times: Once);
-        _supportTicketsRepository.VerifyNoOtherCalls();
+        _solutionsRepository.VerifyNoOtherCalls();
+        _closingManager.Verify(_ => _.EnsureCancelCloseFor(supportTicketId));
+        _closingManager.VerifyNoOtherCalls();
     }
 
     [Test, AutoData]
@@ -1036,5 +1133,72 @@ public class Tests
             .Should()
             .ThrowAsync<BadRequestException>()
             .WithMessage("Suggested solution not exists");
+    }
+
+    [Test, AutoData]
+    public async Task CloseAsync_CorrectCase_Pass(Guid supportTicketId, Account<Guid> account)
+    {
+        // Arrange
+        var supportTicketFromRepository = new SupportTicket
+        {
+            Status = SupportTicketStatus.Open,
+            Agent = new User { Id = account.Id }
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicketFromRepository);
+
+        // Act
+        await _supportTicketsService.CloseAsync(supportTicketId, account);
+
+        // Assert
+        _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicketId), Once);
+        _supportTicketsRepository.Verify(
+            expression: repository =>
+                repository.UpdateAsync(It.Is<SupportTicket>(supportTicket =>
+                    supportTicket == supportTicketFromRepository &&
+                    supportTicket.Status == SupportTicketStatus.Close)),
+            times: Once);
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _escalationManager.Verify(_ => _.CancelEscalationFor(supportTicketId));
+        _escalationManager.VerifyNoOtherCalls();
+        _closingManager.Verify(_ => _.EnsureCancelCloseFor(supportTicketId));
+        _closingManager.VerifyNoOtherCalls();
+    }
+
+    [Test, AutoData]
+    public async Task CloseAsync_AccountIsNotRelated_Throw(Guid supportTicketId, Account<Guid> account)
+    {
+        // Arrange
+        var supportTicket = new SupportTicket
+        {
+            Status = SupportTicketStatus.Open
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicket);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService.CloseAsync(supportTicketId, account);
+
+        // Assert
+        await action.Should().ThrowAsync<UnauthorizedException>();
+    }
+
+    [Test, AutoData]
+    public async Task CloseAsync_SupportTicketNotOpen_Throw(Guid supportTicketId, Account<Guid> account)
+    {
+        // Arrange
+        var supportTicket = new SupportTicket
+        {
+            Status = SupportTicketStatus.Close,
+            Agent = new User { Id = account.Id }
+        };
+        _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicket);
+
+        // Act
+        Func<Task> action = async () => await _supportTicketsService.CloseAsync(supportTicketId, account);
+
+        // Assert
+        await action
+            .Should()
+            .ThrowAsync<BadRequestException>()
+            .WithMessage($"SupportTicket with id: {supportTicket.Id} not open");
     }
 }
