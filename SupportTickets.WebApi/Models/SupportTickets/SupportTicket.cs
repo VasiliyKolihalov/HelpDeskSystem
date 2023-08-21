@@ -29,5 +29,4 @@ public enum SupportTicketPriority
     Low,
     Medium,
     High
-    
 }

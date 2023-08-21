@@ -199,11 +199,11 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         return supportTickets;
     }
 
-    public async Task<IEnumerable<SupportTicket>> GetAllWithoutAgent()
+    public async Task<IEnumerable<SupportTicket>> GetAllOpenWithoutAgent()
     {
-        const string supportTicketsQuery = "select * from SupportTickets " +
+        const string supportTicketsQuery = "select * from SupportTickets supportTickets " +
                                            "inner join Users us on SupportTickets.UserId = us.Id " +
-                                           "where SupportTickets.AgentId is null";
+                                           "where supportTickets.AgentId is null and supportTickets.status = 'Open'";
 
         const string messagesQuery = "select * from Messages " +
                                      "inner join Users users on Messages.UserId = users.Id " +
@@ -240,7 +240,7 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         });
         return tickets;
     }
-    
+
     private static SupportTicket MapSupportTicketQuery(SupportTicket supportTicket, User user, User agent)
     {
         supportTicket.User = user;

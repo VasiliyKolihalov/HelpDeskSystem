@@ -91,12 +91,12 @@
       "SwaggerKey": "Authentication"
     },
     {
-      "UpstreamPathTemplate": "/gateway/accounts/{accountId}/roles/{roleId}",
+      "UpstreamPathTemplate": "/gateway/accounts/{id}/roles/{roleId}",
       "UpstreamHttpMethod": [
         "Post",
         "Delete"
       ],
-      "DownstreamPathTemplate": "/accounts/{accountId}/roles/{roleId}",
+      "DownstreamPathTemplate": "/accounts/{id}/roles/{roleId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

@@ -8,10 +8,11 @@ using Infrastructure.Middlewares;
 using Infrastructure.Services.Persistence;
 using SupportTickets.WebApi.Constants;
 using SupportTickets.WebApi.Filters;
-using SupportTickets.WebApi.Repositories.AgentsSupportTicketsHistory;
 using SupportTickets.WebApi.Repositories.Messages;
 using SupportTickets.WebApi.Repositories.Solutions;
+using SupportTickets.WebApi.Repositories.SupportTicketAgentRecords;
 using SupportTickets.WebApi.Repositories.SupportTickets;
+using SupportTickets.WebApi.Repositories.SupportTicketStatusRecords;
 using SupportTickets.WebApi.Repositories.Users;
 using SupportTickets.WebApi.Services;
 using SupportTickets.WebApi.Services.JobsManagers.Closing;
@@ -37,7 +38,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
         .AddTransient<ISupportTicketsRepository, SupportTicketsRepository>()
         .AddTransient<IMessagesRepository, MessagesRepository>()
         .AddTransient<ISolutionsRepository, SolutionsRepository>()
-        .AddTransient<IAgentsSupportTicketsHistoryRepository, AgentsSupportTicketsHistoryRepository>()
+        .AddTransient<ISupportTicketAgentRecordsRepository, SupportTicketAgentRecordsRepository>()
+        .AddTransient<ISupportTicketStatusRecordsRepository, SupportTicketStatusRecordsRepository>()
         .AddTransient<IUsersRepository, UsersRepository>();
 
     builder.Services.AddHangfire(options => { options.UsePostgreSqlStorage(connectionString); });

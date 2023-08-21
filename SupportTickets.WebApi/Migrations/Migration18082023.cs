@@ -13,17 +13,18 @@ public class Migration18082023 : Migration
             .AddColumn("Priority").AsString().NotNullable();
 
         Create
-            .Table("SupportTicketsAgents")
+            .Table("SupportTicketAgentRecords")
             .WithColumn("SupportTicketId").AsGuid().PrimaryKey()
             .ForeignKey("SupportTickets", "Id").OnDeleteOrUpdate(Rule.Cascade)
             .WithColumn("AgentId").AsGuid().PrimaryKey()
-            .ForeignKey("Users", "Id").OnDeleteOrUpdate(Rule.Cascade);
+            .ForeignKey("Users", "Id").OnDeleteOrUpdate(Rule.Cascade)
+            .WithColumn("DateTime").AsDateTime().NotNullable();
     }
 
     public override void Down()
     {
         Delete.Column("Priority").FromTable("SupportTickets");
 
-        Delete.Table("SupportTicketsAgents");
+        Delete.Table("SupportTicketAgentRecords");
     }
 }
