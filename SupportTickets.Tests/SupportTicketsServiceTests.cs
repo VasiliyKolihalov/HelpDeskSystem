@@ -362,7 +362,7 @@ public class Tests
         _agentsHistoryRepository.Verify(_ => _.GetBySupportTicketIdAsync(supportTicketId), Once);
         _agentsHistoryRepository.Verify(_ => _.InsertAsync(supportTicketId, account.Id), Once);
         _agentsHistoryRepository.VerifyNoOtherCalls();
-        _escalationManager.Verify(_ => _.AssignEscalationFor(supportTicketId, TimeSpan.FromDays(7)), Once);
+        _escalationManager.Verify(_ => _.AssignEscalationFor(supportTicketId, TimeSpan.FromDays(10)), Once);
         _escalationManager.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<User>(account), Once);
         _mapper.VerifyNoOtherCalls();
@@ -512,7 +512,7 @@ public class Tests
                     message.User.Id == account.Id)),
             times: Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
-        _closingManager.Verify(_ => _.EnsureAssignCloseFor(messageCreate.SupportTicketId, TimeSpan.FromDays(2)), Once);
+        _closingManager.Verify(_ => _.EnsureAssignCloseFor(messageCreate.SupportTicketId, TimeSpan.FromDays(1)), Once);
         _closingManager.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<Message>(messageCreate), Once);
         _mapper.Verify(_ => _.Map<User>(account), Once);
@@ -850,7 +850,7 @@ public class Tests
                 solution.Status == SolutionStatus.Suggested)),
             times: Once);
         _solutionsRepository.VerifyNoOtherCalls();
-        _closingManager.Verify(_ => _.EnsureAssignCloseFor(message.SupportTicketId, TimeSpan.FromDays(2)), Once);
+        _closingManager.Verify(_ => _.EnsureAssignCloseFor(message.SupportTicketId, TimeSpan.FromDays(1)), Once);
         _mapper.Verify(_ => _.Map<Solution>(solutionSuggest));
         _mapper.VerifyNoOtherCalls();
     }
