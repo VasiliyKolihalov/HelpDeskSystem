@@ -65,17 +65,17 @@ public class AccountsController : ControllerBase
         await _accountsService.DeleteAsync(this.GetAccountIdFromJwt<Guid>());
     }
 
-    [HttpPost("{accountId:guid}/roles/{roleId}")]
+    [HttpPost("{id:guid}/roles/{roleId}")]
     [Authorize(Policy = AccountPermissions.AddRole)]
-    public async Task AddToRoleAsync(Guid accountId, string roleId)
+    public async Task AddToRoleAsync(Guid id, string roleId)
     {
-        await _accountsService.AddToRoleAsync(accountId, roleId);
+        await _accountsService.AddToRoleAsync(id, roleId);
     }
 
-    [HttpDelete("{accountId:guid}/roles/{roleId}")]
+    [HttpDelete("{id:guid}/roles/{roleId}")]
     [Authorize(Policy = AccountPermissions.RemoveRole)]
-    public async Task RemoveFromRoleAsync(Guid accountId, string roleId)
+    public async Task RemoveFromRoleAsync(Guid id, string roleId)
     {
-        await _accountsService.RemoveFromRoleAsync(accountId, roleId);
+        await _accountsService.RemoveFromRoleAsync(id, roleId);
     }
 }

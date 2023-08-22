@@ -4,5 +4,5 @@ namespace Authentication.Infrastructure.Services;
 
 public interface IJwtService
 {
-    public string GenerateJwt<TId>(Account<TId> account);
+    public string GenerateJwt<TId>(Account<TId> account) where TId : notnull;
 }

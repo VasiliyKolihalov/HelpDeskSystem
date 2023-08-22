@@ -1,8 +1,11 @@
+using AutoMapper;
 using Hangfire;
 using Hangfire.Storage;
 using Hangfire.Storage.Monitoring;
 using SupportTickets.WebApi.Models.SupportTickets;
+using SupportTickets.WebApi.Models.SupportTicketStatusRecords;
 using SupportTickets.WebApi.Repositories.SupportTickets;
+using SupportTickets.WebApi.Repositories.SupportTicketStatusRecords;
 
 namespace SupportTickets.WebApi.Services.JobsManagers.Closing;
 
@@ -10,13 +13,19 @@ public class SupportTicketsClosingManager : ISupportTicketsClosingManager
 {
     private readonly IBackgroundJobClient _jobClient;
     private readonly ISupportTicketsRepository _supportTicketsRepository;
-    private readonly Dictionary<Guid, string> _jobIds = new();
+    private readonly ISupportTicketStatusRecordsRepository _statusRecordsRepository;
+    private readonly IMapper _mapper;
 
-    public SupportTicketsClosingManager(IBackgroundJobClient jobClient,
-        ISupportTicketsRepository supportTicketsRepository)
+    public SupportTicketsClosingManager(
+        IBackgroundJobClient jobClient, 
+        ISupportTicketsRepository supportTicketsRepository, 
+        ISupportTicketStatusRecordsRepository statusRecordsRepository, 
+        IMapper mapper)
     {
         _jobClient = jobClient;
         _supportTicketsRepository = supportTicketsRepository;
+        _statusRecordsRepository = statusRecordsRepository;
+        _mapper = mapper;
     }
 
     public void EnsureAssignCloseFor(Guid supportTicketId, TimeSpan afterTime)
@@ -24,7 +33,7 @@ public class SupportTicketsClosingManager : ISupportTicketsClosingManager
         if (GetEscalationJobId(supportTicketId) != null)
             return;
 
-        _jobIds[supportTicketId] = _jobClient.Schedule(() => EnsureCloseAsync(supportTicketId), afterTime);
+        _jobClient.Schedule(() => EnsureCloseAsync(supportTicketId), afterTime);
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -38,6 +47,10 @@ public class SupportTicketsClosingManager : ISupportTicketsClosingManager
 
         supportTicket.Status = SupportTicketStatus.Close;
         await _supportTicketsRepository.UpdateAsync(supportTicket);
+        
+        var statusRecord = _mapper.Map<SupportTicketStatusRecord>(supportTicket);
+        statusRecord.DateTime = DateTime.Now;
+        await _statusRecordsRepository.InsertAsync(statusRecord);
     }
 
     public void EnsureCancelCloseFor(Guid supportTicketId)
