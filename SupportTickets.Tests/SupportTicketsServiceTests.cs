@@ -1287,7 +1287,7 @@ public class Tests
             User = new User { Id = accountId }
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicketFromRepository);
-        var records = new[] { new SupportTicketStatusRecord() };
+        var records = new[] { new SupportTicketStatusRecord {DateTime = DateTime.Now} };
         _statusRecordsRepository
             .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketId))
             .ReturnsAsync(records);
@@ -1382,7 +1382,7 @@ public class Tests
             User = new User { Id = accountId }
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicketFromRepository);
-        var records = new[] { new SupportTicketStatusRecord { DateTime = DateTime.Now.Add(TimeSpan.FromDays(11)) } };
+        var records = new[] { new SupportTicketStatusRecord { DateTime = DateTime.Now.Subtract(TimeSpan.FromDays(20)) } };
         _statusRecordsRepository
             .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketId))
             .ReturnsAsync(records);

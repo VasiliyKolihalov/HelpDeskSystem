@@ -1,4 +1,4 @@
-namespace Authentication.WebApi.Services;
+namespace Authentication.WebApi.Services.EmailConfirmCodes;
 
 public interface IEmailConfirmCodeProvider
 {

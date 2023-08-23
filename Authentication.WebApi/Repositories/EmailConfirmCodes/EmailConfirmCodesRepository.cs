@@ -1,29 +1,30 @@
 using System.Data.Common;
+using Authentication.WebApi.Models.EmailConfirmCodes;
 using Dapper.Transaction;
 using Infrastructure.Extensions;
 using Infrastructure.Services.Persistence;
 
-namespace Authentication.WebApi.Repositories.ConfirmCodes;
+namespace Authentication.WebApi.Repositories.EmailConfirmCodes;
 
-public class ConfirmCodesRepository : IConfirmCodesRepository
+public class EmailConfirmCodesRepository : IEmailConfirmCodesRepository
 {
     private readonly IDbContext _dbContext;
 
-    public ConfirmCodesRepository(IDbContext dbContext)
+    public EmailConfirmCodesRepository(IDbContext dbContext)
     {
         _dbContext = dbContext;
     }
 
-    public async Task<string?> GetByAccountIdAsync(Guid accountId)
+    public async Task<EmailConfirmCode?> GetByAccountIdAsync(Guid accountId)
     {
-        const string query = "select ConfirmCode from AccountsEmailConfirmCodes where AccountId = @accountId";
-        string? confirmCode = null;
+        const string query = "select * from AccountsEmailConfirmCodes where AccountId = @accountId";
+        EmailConfirmCode? code = null;
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(async transaction =>
         {
-            confirmCode = await transaction.QueryFirstOrDefaultAsync<string>(query, new { accountId });
+            code = await transaction.QueryFirstOrDefaultAsync<EmailConfirmCode>(query, new { accountId });
         });
-        return confirmCode;
+        return code;
     }
 
     public async Task<bool> IsExistsAsync(Guid accountId)
@@ -38,15 +39,15 @@ public class ConfirmCodesRepository : IConfirmCodesRepository
         return exists;
     }
 
-    public async Task InsertAsync(Guid accountId, string code)
+    public async Task InsertAsync(EmailConfirmCode code)
     {
-        const string query = "insert into AccountsEmailConfirmCodes values (@accountId, @code)";
+        const string query = "insert into AccountsEmailConfirmCodes values (@AccountId, @Code, @DateTime)";
         await using DbConnection connection = _dbContext.CreateConnection();
         await connection.ExecuteTransactionAsync(
-            async transaction => await transaction.ExecuteAsync(query, new { accountId, code }));
+            async transaction => await transaction.ExecuteAsync(query, code));
     }
 
-    public async Task DeleteAsync(Guid accountId)
+    public async Task DeleteByAccountIdAsync(Guid accountId)
     {
         const string query = "delete from AccountsEmailConfirmCodes where AccountId = @accountId";
         await using DbConnection connection = _dbContext.CreateConnection();

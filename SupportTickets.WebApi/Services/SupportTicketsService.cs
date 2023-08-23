@@ -331,8 +331,8 @@ public class SupportTicketsService
 
         IEnumerable<SupportTicketStatusRecord> statusRecords =
             await _statusRecordsRepository.GetBySupportTicketIdAsync(supportTicketId);
-
-        if (statusRecords.Last().DateTime > DateTime.Now + TimeToEscalation)
+                                          
+        if (statusRecords.Last().DateTime + TimeForReopen < DateTime.Now)
             throw new BadRequestException($"SupportTicket can be reopen only if less elapsed than {TimeForReopen}");
 
         supportTicket.Status = SupportTicketStatus.Open;
