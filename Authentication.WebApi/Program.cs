@@ -4,11 +4,12 @@ using Authentication.Infrastructure.Models;
 using Authentication.Infrastructure.Services;
 using Authentication.WebApi.Constants;
 using Authentication.WebApi.Repositories.Accounts;
-using Authentication.WebApi.Repositories.ConfirmCodes;
+using Authentication.WebApi.Repositories.EmailConfirmCodes;
 using Authentication.WebApi.Repositories.Permissions;
 using Authentication.WebApi.Repositories.Roles;
 using Authentication.WebApi.Services;
 using Authentication.WebApi.Services.Clients.Users;
+using Authentication.WebApi.Services.EmailConfirmCodes;
 using Infrastructure.Extensions;
 using Infrastructure.Middlewares;
 using Infrastructure.Services.Persistence;
@@ -30,7 +31,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
         .AddFluentMigrationForPostgres(connectionString, Assembly.GetExecutingAssembly())
         .AddTransient<IAccountsRepository, AccountsRepository>()
         .AddTransient<IRolesRepository, RolesRepository>()
-        .AddTransient<IConfirmCodesRepository, ConfirmCodesRepository>()
+        .AddTransient<IEmailConfirmCodesRepository, EmailConfirmCodesRepository>()
         .AddTransient<IPermissionsRepository, PermissionsRepository>();
 
     builder.Services

@@ -10,12 +10,6 @@ public class Migration28072023 : Migration
         Alter
             .Table("Accounts")
             .AddColumn("IsEmailConfirm").AsBoolean().NotNullable().SetExistingRowsTo(false);
-
-        Create
-            .Table("AccountsEmailConfirmCodes")
-            .WithColumn("AccountId").AsGuid().PrimaryKey()
-            .ForeignKey("Accounts", "Id")
-            .WithColumn("ConfirmCode").AsString().PrimaryKey();
     }
 
     public override void Down()
@@ -23,7 +17,5 @@ public class Migration28072023 : Migration
         Delete
             .Column("IsEmailConfirm")
             .FromTable("Accounts");
-
-        Delete.Table("AccountsEmailConfirmCodes");
     }
 }

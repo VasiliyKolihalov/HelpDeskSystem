@@ -1,12 +1,14 @@
 ﻿using Authentication.Infrastructure.Models;
 using Authentication.Infrastructure.Services;
 using Authentication.WebApi.Models.Accounts;
+using Authentication.WebApi.Models.EmailConfirmCodes;
 using Authentication.WebApi.Models.Http.Users;
 using Authentication.WebApi.Models.Messaging;
 using Authentication.WebApi.Repositories.Accounts;
-using Authentication.WebApi.Repositories.ConfirmCodes;
+using Authentication.WebApi.Repositories.EmailConfirmCodes;
 using Authentication.WebApi.Repositories.Roles;
 using Authentication.WebApi.Services.Clients.Users;
+using Authentication.WebApi.Services.EmailConfirmCodes;
 using AutoMapper;
 using Infrastructure.Exceptions;
 using Infrastructure.Services.Messaging;
@@ -18,17 +20,19 @@ public class AccountsService
 {
     private readonly IAccountsRepository _accountsRepository;
     private readonly IRolesRepository _rolesRepository;
-    private readonly IConfirmCodesRepository _confirmCodesRepository;
+    private readonly IEmailConfirmCodesRepository _emailConfirmCodesRepository;
     private readonly IJwtService _jwtService;
     private readonly IUsersClient _usersClient;
     private readonly IRabbitMqPublisher _rabbitMqPublisher;
     private readonly IEmailConfirmCodeProvider _emailConfirmCodeProvider;
     private readonly IMapper _mapper;
 
+    private static readonly TimeSpan TimeForUseEmailConfirmCode = TimeSpan.FromMinutes(2);
+
     public AccountsService(
         IAccountsRepository accountsRepository,
         IRolesRepository rolesRepository,
-        IConfirmCodesRepository confirmCodesRepository,
+        IEmailConfirmCodesRepository emailConfirmCodesRepository,
         IJwtService jwtService,
         IUsersClient usersClient,
         IRabbitMqPublisher rabbitMqPublisher,
@@ -37,7 +41,7 @@ public class AccountsService
     {
         _accountsRepository = accountsRepository;
         _rolesRepository = rolesRepository;
-        _confirmCodesRepository = confirmCodesRepository;
+        _emailConfirmCodesRepository = emailConfirmCodesRepository;
         _jwtService = jwtService;
         _usersClient = usersClient;
         _rabbitMqPublisher = rabbitMqPublisher;
@@ -80,40 +84,50 @@ public class AccountsService
         if (account.IsEmailConfirm)
             throw new BadRequestException("Email already confirm");
 
-        if (await _confirmCodesRepository.IsExistsAsync(accountId))
-            await _confirmCodesRepository.DeleteAsync(accountId);
+        if (await _emailConfirmCodesRepository.IsExistsAsync(accountId))
+            await _emailConfirmCodesRepository.DeleteByAccountIdAsync(accountId);
 
-        string code = _emailConfirmCodeProvider.Generate();
-        await _confirmCodesRepository.InsertAsync(accountId, code);
+        var emailConfirmCode = new EmailConfirmCode
+        {
+            AccountId = accountId,
+            Code = _emailConfirmCodeProvider.Generate(),
+            DateTime = DateTime.Now
+        };
+        await _emailConfirmCodesRepository.InsertAsync(emailConfirmCode);
 
         UserView userView = await _usersClient.SendGetRequestAsync(userId: accountId);
 
         _rabbitMqPublisher.PublishMessage(
-            message: new RequestEmailConfirm
+            message: new RequestEmailConfirmCode
             {
-                ConfirmCode = code,
+                ConfirmCode = emailConfirmCode.Code,
                 Email = account.Email,
                 FirstName = userView.FirstName
             },
-            routingKey: "notifications.requested_email_confirm");
+            routingKey: "notifications.requested_email_confirm_code");
     }
 
-    public async Task ConfirmEmailAsync(string confirmCode, Guid accountId)
+    public async Task ConfirmEmailAsync(string code, Guid accountId)
     {
         UserAccount account = (await _accountsRepository.GetByIdAsync(accountId))!;
 
         if (account.IsEmailConfirm)
             throw new BadRequestException("Email already confirm");
 
-        string trueConfirmCode = await _confirmCodesRepository.GetByAccountIdAsync(accountId)
-                                 ?? throw new BadRequestException("Account didn't request for confirm code");
+        EmailConfirmCode trueEmailConfirmCode = await _emailConfirmCodesRepository.GetByAccountIdAsync(accountId)
+                                                ?? throw new BadRequestException(
+                                                    "Account didn't request for confirm code");
 
-        if (confirmCode != trueConfirmCode)
+        if (trueEmailConfirmCode.Code != code)
             throw new BadRequestException("Incorrect confirm code");
+
+        if (trueEmailConfirmCode.DateTime + TimeForUseEmailConfirmCode < DateTime.Now)
+            throw new BadRequestException(
+                $"EmailConfirmCode can be user only if less elapsed than {TimeForUseEmailConfirmCode}");
 
         account.IsEmailConfirm = true;
         await _accountsRepository.UpdateAsync(account);
-        await _confirmCodesRepository.DeleteAsync(account.Id);
+        await _emailConfirmCodesRepository.DeleteByAccountIdAsync(accountId);
     }
 
     public async Task ChangeEmailAsync(ChangeEmail changeEmail, Guid accountId)
