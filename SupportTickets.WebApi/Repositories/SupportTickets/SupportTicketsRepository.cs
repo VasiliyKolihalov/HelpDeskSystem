@@ -6,6 +6,7 @@ using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
+using SupportTickets.WebApi.Services;
 
 namespace SupportTickets.WebApi.Repositories.SupportTickets;
 
@@ -239,6 +240,65 @@ public class SupportTicketsRepository : ISupportTicketsRepository
             }
         });
         return tickets;
+    }
+
+    public async Task<IEnumerable<SupportTicket>> GetByPagination(
+        Action<ISupportTicketsPaginationQueueBuilder> builderAction)
+    {
+        var queueBuilder = new SupportTicketsPaginationQueueBuilder("select * from SupportTickets supporttickets " +
+                                                                    "inner join Users us on SupportTickets.UserId = us.Id " +
+                                                                    "left join Users agents on SupportTickets.AgentId = agents.Id ");
+        builderAction(queueBuilder);
+
+        string supportTicketsQuery = queueBuilder.Build();
+
+        const string messagesQuery = "select * from Messages " +
+                                     "inner join Users users on Messages.UserId = users.Id " +
+                                     "where SupportTicketId = @Id";
+
+        const string solutionsQuery = "select * from Solutions " +
+                                      "inner join Messages messages on Solutions.MessageId = messages.Id " +
+                                      "where messages.SupportTicketId = @Id";
+
+        IEnumerable<SupportTicket> tickets = null!;
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            tickets = (await transaction.QueryAsync<SupportTicket, User, User, SupportTicket>(
+                sql: supportTicketsQuery,
+                map: MapSupportTicketQuery)).ToList();
+
+            if (!tickets.Any())
+                return;
+
+            foreach (SupportTicket supportTicket in tickets)
+            {
+                supportTicket.Messages =
+                    await transaction.QueryAsync<Message, User, Message>(messagesQuery, MapMessagesQuery,
+                        new { supportTicket.Id });
+
+                supportTicket.Solutions =
+                    await transaction.QueryAsync<Solution>(solutionsQuery, new { supportTicket.Id });
+            }
+        });
+        return tickets;
+    }
+
+    public async Task<int> GetCountByPagination(
+        Action<ISupportTicketsPaginationQueueBuilder> builderAction)
+    {
+        var queueBuilder = new SupportTicketsPaginationQueueBuilder("select count(*) from SupportTickets ");
+        builderAction(queueBuilder);
+
+        string supportTicketsQuery = queueBuilder.Build();
+
+        var count = 0;
+        await using DbConnection connection = _dbContext.CreateConnection();
+        await connection.ExecuteTransactionAsync(async transaction =>
+        {
+            count = await transaction.QuerySingleAsync<int>(sql: supportTicketsQuery);
+        });
+        return count;
     }
 
     private static SupportTicket MapSupportTicketQuery(SupportTicket supportTicket, User user, User agent)

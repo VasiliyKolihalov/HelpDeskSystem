@@ -6,6 +6,7 @@ using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTicketAgentRecords;
 using SupportTickets.WebApi.Models.SupportTickets;
+using SupportTickets.WebApi.Models.SupportTicketsPages;
 using SupportTickets.WebApi.Models.SupportTicketStatusRecords;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.Messages;
@@ -74,16 +75,49 @@ public class Tests
     }
 
     [Test, AutoData]
-    public async Task GetFreeAsync_CorrectCase_Pass(List<SupportTicket> supportTickets, Guid accountId)
+    public async Task GetAllPageAsync_CorrectCase_Pass(SupportTicketPageGet pageGet, List<SupportTicket> supportTickets)
+    {
+        // Arrange
+        _supportTicketsRepository
+            .Setup(_ => _.GetByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()))
+            .ReturnsAsync(supportTickets);
+        _supportTicketsRepository
+            .Setup(_ => _.GetCountByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()))
+            .ReturnsAsync(supportTickets.Count);
+        var page = new SupportTicketPageView();
+        _mapper
+            .Setup(_ => _.Map<SupportTicketPageView>(pageGet))
+            .Returns(page);
+        SupportTicketPreview[] supportTicketPreviewsFromMapper = Array.Empty<SupportTicketPreview>();
+        _mapper
+            .Setup(_ => _.Map<IEnumerable<SupportTicketPreview>>(supportTickets))
+            .Returns(supportTicketPreviewsFromMapper);
+
+        // Act
+        SupportTicketPageView result = await _supportTicketsService.GetAllPageAsync(pageGet);
+
+        // Assert
+        result.TotalPages.Should().Be((int)Math.Ceiling((double)supportTickets.Count / pageGet.PageSize));
+        result.SupportTickets.Should().BeEquivalentTo(supportTicketPreviewsFromMapper);
+        _supportTicketsRepository.Verify(
+            _ => _.GetByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()), Once);
+        _supportTicketsRepository.Verify(
+            _ => _.GetCountByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()), Once);
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _mapper.Verify(_ => _.Map<SupportTicketPageView>(pageGet), Once);
+        _mapper.Verify(_ => _.Map<IEnumerable<SupportTicketPreview>>(supportTickets), Once);
+        _mapper.VerifyNoOtherCalls();
+    }
+
+    [Test, AutoData]
+    public async Task GetFreeAsync_CorrectCase_Pass(Guid accountId, List<SupportTicket> supportTickets)
     {
         // Arrange
         _supportTicketsRepository.Setup(_ => _.GetAllOpenWithoutAgent()).ReturnsAsync(supportTickets);
-
         Guid supportTicketIdWhereAccountWasNotAgent = supportTickets.First().Id;
         _agentRecordsRepository
             .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketIdWhereAccountWasNotAgent))
             .ReturnsAsync(Array.Empty<SupportTicketAgentRecord>());
-
         var agentRecords = new[] { new SupportTicketAgentRecord { AgentId = accountId } };
         _agentRecordsRepository
             .Setup(repository =>
@@ -111,9 +145,66 @@ public class Tests
     }
 
     [Test, AutoData]
+    public async Task GetFreePageAsync_CorrectCase_Pass(
+        SupportTicketPageGetFree pageGetFree,
+        Guid accountId,
+        List<SupportTicket> supportTickets)
+    {
+        // Arrange
+        _supportTicketsRepository
+            .Setup(_ => _.GetByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()))
+            .ReturnsAsync(supportTickets);
+        _supportTicketsRepository
+            .Setup(_ => _.GetCountByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()))
+            .ReturnsAsync(supportTickets.Count);
+        Guid supportTicketIdWhereAccountWasNotAgent = supportTickets.First().Id;
+        _agentRecordsRepository
+            .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketIdWhereAccountWasNotAgent))
+            .ReturnsAsync(Array.Empty<SupportTicketAgentRecord>());
+        var agentRecords = new[] { new SupportTicketAgentRecord { AgentId = accountId } };
+        _agentRecordsRepository
+            .Setup(repository =>
+                repository.GetBySupportTicketIdAsync(It.IsNotIn(supportTicketIdWhereAccountWasNotAgent)))
+            .ReturnsAsync(agentRecords);
+        var page = new SupportTicketPageView();
+        _mapper
+            .Setup(_ => _.Map<SupportTicketPageView>(pageGetFree))
+            .Returns(page);
+        SupportTicketPreview[] supportTicketPreviewsFromMapper = Array.Empty<SupportTicketPreview>();
+        _mapper
+            .Setup(_ => _.Map<IEnumerable<SupportTicketPreview>>(supportTickets))
+            .Returns(supportTicketPreviewsFromMapper);
+
+        // Act
+        SupportTicketPageView result = await _supportTicketsService.GetFreePageAsync(pageGetFree, accountId);
+
+        // Assert
+        result.TotalPages.Should().Be((int)Math.Ceiling((double)supportTickets.Count / pageGetFree.PageSize));
+        result.SupportTickets.Should().BeEquivalentTo(supportTicketPreviewsFromMapper);
+        result.Status.Should().Be(SupportTicketStatus.Open);
+        _supportTicketsRepository.Verify(
+            _ => _.GetByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()), Once);
+        _supportTicketsRepository.Verify(
+            _ => _.GetCountByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()), Once);
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _agentRecordsRepository.Verify(
+            expression: _ => _.GetBySupportTicketIdAsync(It.IsAny<Guid>()),
+            times: Exactly(supportTickets.Count));
+        _agentRecordsRepository.VerifyNoOtherCalls();
+        _mapper.Verify(_ => _.Map<SupportTicketPageView>(pageGetFree), Once);
+        _mapper.Verify(
+            expression: mapper => mapper.Map<IEnumerable<SupportTicketPreview>>(
+                It.Is<IEnumerable<SupportTicket>>(_ =>
+                    _.Count() == 1 &&
+                    _.First().Id == supportTicketIdWhereAccountWasNotAgent)),
+            times: Once);
+        _mapper.VerifyNoOtherCalls();
+    }
+
+    [Test, AutoData]
     public async Task GetByAccountIdAsync_CorrectCase_Pass(
-        IEnumerable<SupportTicket> supportTickets,
-        Guid accountId)
+        Guid accountId,
+        IEnumerable<SupportTicket> supportTickets)
     {
         // Arrange
         _supportTicketsRepository.Setup(_ => _.GetBasedOnAccountAsync(accountId)).ReturnsAsync(supportTickets);
@@ -125,6 +216,44 @@ public class Tests
         result.Should().NotBeNull();
         _supportTicketsRepository.Verify(_ => _.GetBasedOnAccountAsync(accountId), Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _mapper.Verify(_ => _.Map<IEnumerable<SupportTicketPreview>>(supportTickets), Once);
+        _mapper.VerifyNoOtherCalls();
+    }
+
+    [Test, AutoData]
+    public async Task GetByAccountIdPageAsync_CorrectCase_Pass(
+        SupportTicketPageGet pageGet,
+        Guid accountId,
+        List<SupportTicket> supportTickets)
+    {
+        // Arrange
+        _supportTicketsRepository
+            .Setup(_ => _.GetByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()))
+            .ReturnsAsync(supportTickets);
+        _supportTicketsRepository
+            .Setup(_ => _.GetCountByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()))
+            .ReturnsAsync(supportTickets.Count);
+        var page = new SupportTicketPageView();
+        _mapper
+            .Setup(_ => _.Map<SupportTicketPageView>(pageGet))
+            .Returns(page);
+        SupportTicketPreview[] supportTicketPreviewsFromMapper = Array.Empty<SupportTicketPreview>();
+        _mapper
+            .Setup(_ => _.Map<IEnumerable<SupportTicketPreview>>(supportTickets))
+            .Returns(supportTicketPreviewsFromMapper);
+
+        // Act
+        SupportTicketPageView result = await _supportTicketsService.GetByAccountIdPageAsync(pageGet, accountId);
+
+        // Assert
+        result.TotalPages.Should().Be((int)Math.Ceiling((double)supportTickets.Count / pageGet.PageSize));
+        result.SupportTickets.Should().BeEquivalentTo(supportTicketPreviewsFromMapper);
+        _supportTicketsRepository.Verify(
+            _ => _.GetByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()), Once);
+        _supportTicketsRepository.Verify(
+            _ => _.GetCountByPagination(It.IsAny<Action<ISupportTicketsPaginationQueueBuilder>>()), Once);
+        _supportTicketsRepository.VerifyNoOtherCalls();
+        _mapper.Verify(_ => _.Map<SupportTicketPageView>(pageGet), Once);
         _mapper.Verify(_ => _.Map<IEnumerable<SupportTicketPreview>>(supportTickets), Once);
         _mapper.VerifyNoOtherCalls();
     }
@@ -1287,7 +1416,7 @@ public class Tests
             User = new User { Id = accountId }
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicketFromRepository);
-        var records = new[] { new SupportTicketStatusRecord {DateTime = DateTime.Now} };
+        var records = new[] { new SupportTicketStatusRecord { DateTime = DateTime.Now } };
         _statusRecordsRepository
             .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketId))
             .ReturnsAsync(records);
@@ -1382,7 +1511,8 @@ public class Tests
             User = new User { Id = accountId }
         };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicketId)).ReturnsAsync(supportTicketFromRepository);
-        var records = new[] { new SupportTicketStatusRecord { DateTime = DateTime.Now.Subtract(TimeSpan.FromDays(20)) } };
+        var records = new[]
+            { new SupportTicketStatusRecord { DateTime = DateTime.Now.Subtract(TimeSpan.FromDays(20)) } };
         _statusRecordsRepository
             .Setup(_ => _.GetBySupportTicketIdAsync(supportTicketId))
             .ReturnsAsync(records);

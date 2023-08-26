@@ -34,6 +34,21 @@
       "SwaggerKey": "SupportTickets"
     },
     {
+      "UpstreamPathTemplate": "/gateway/supporttickets/page{everything}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/page?{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
       "UpstreamPathTemplate": "/gateway/supporttickets/free",
       "UpstreamHttpMethod": [
         "Get"
@@ -49,11 +64,41 @@
       "SwaggerKey": "SupportTickets"
     },
     {
+      "UpstreamPathTemplate": "/gateway/supporttickets/free/page{everything}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/free/page?{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
       "UpstreamPathTemplate": "/gateway/supporttickets/my",
       "UpstreamHttpMethod": [
         "Get"
       ],
       "DownstreamPathTemplate": "/supporttickets/my",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_webapi",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/my/page{everything}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/my/page?{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

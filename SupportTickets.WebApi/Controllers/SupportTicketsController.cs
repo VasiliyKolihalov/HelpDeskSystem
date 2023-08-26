@@ -7,6 +7,7 @@ using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTicketAgentRecords;
 using SupportTickets.WebApi.Models.SupportTickets;
+using SupportTickets.WebApi.Models.SupportTicketsPages;
 using SupportTickets.WebApi.Models.SupportTicketStatusRecords;
 using SupportTickets.WebApi.Services;
 using static SupportTickets.WebApi.Constants.PermissionNames;
@@ -32,6 +33,13 @@ public class SupportTicketsController : ControllerBase
         return await _supportTicketsService.GetAllAsync();
     }
 
+    [HttpGet("page")]
+    [Authorize(Policy = SupportTicketPermissions.GetAll)]
+    public async Task<SupportTicketPageView> GetAllPageAsync([FromQuery] SupportTicketPageGet pageGet)
+    {
+        return await _supportTicketsService.GetAllPageAsync(pageGet);
+    }
+
     [HttpGet("free")]
     [Authorize(Policy = SupportTicketPermissions.GetFree)]
     public async Task<IEnumerable<SupportTicketPreview>> GetFreeAsync()
@@ -39,10 +47,23 @@ public class SupportTicketsController : ControllerBase
         return await _supportTicketsService.GetFreeAsync(this.GetAccountIdFromJwt<Guid>());
     }
 
+    [HttpGet("free/page")]
+    [Authorize(Policy = SupportTicketPermissions.GetFree)]
+    public async Task<SupportTicketPageView> GetFreePageAsync([FromQuery] SupportTicketPageGetFree pageGetFree)
+    {
+        return await _supportTicketsService.GetFreePageAsync(pageGetFree, this.GetAccountIdFromJwt<Guid>());
+    }
+
     [HttpGet("my")]
     public async Task<IEnumerable<SupportTicketPreview>> GetByAccountAsync()
     {
         return await _supportTicketsService.GetByAccountIdAsync(this.GetAccountIdFromJwt<Guid>());
+    }
+
+    [HttpGet("my/page")]
+    public async Task<SupportTicketPageView> GetByAccountPageAsync([FromQuery] SupportTicketPageGet pageGet)
+    {
+        return await _supportTicketsService.GetByAccountIdPageAsync(pageGet, this.GetAccountIdFromJwt<Guid>());
     }
 
     [HttpGet("{id:guid}")]

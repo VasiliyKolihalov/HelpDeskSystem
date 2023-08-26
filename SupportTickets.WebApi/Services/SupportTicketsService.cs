@@ -5,6 +5,7 @@ using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTicketAgentRecords;
 using SupportTickets.WebApi.Models.SupportTickets;
+using SupportTickets.WebApi.Models.SupportTicketsPages;
 using SupportTickets.WebApi.Models.SupportTicketStatusRecords;
 using SupportTickets.WebApi.Models.Users;
 using SupportTickets.WebApi.Repositories.Messages;
@@ -60,6 +61,38 @@ public class SupportTicketsService
         return _mapper.Map<IEnumerable<SupportTicketPreview>>(supportTickets);
     }
 
+    public async Task<SupportTicketPageView> GetAllPageAsync(SupportTicketPageGet pageGet)
+    {
+        IEnumerable<SupportTicket> supportTickets = await _supportTicketsRepository.GetByPagination(builder =>
+        {
+            SetFilterForGetAllPage(pageGet, builder);
+
+            builder.LimitAndOffset(
+                limit: pageGet.PageSize,
+                offset: pageGet.PageSize * pageGet.PageNumber - pageGet.PageSize);
+        });
+
+        var pageView = _mapper.Map<SupportTicketPageView>(pageGet);
+        pageView.SupportTickets = _mapper.Map<IEnumerable<SupportTicketPreview>>(supportTickets);
+        int count = await _supportTicketsRepository.GetCountByPagination(builder =>
+        {
+            SetFilterForGetAllPage(pageGet, builder);
+        });
+        pageView.TotalPages = (int)Math.Ceiling((double)count / pageGet.PageSize);
+        return pageView;
+    }
+
+    private static void SetFilterForGetAllPage(
+        SupportTicketPageGet pageGet,
+        ISupportTicketsPaginationQueueBuilder builder)
+    {
+        if (pageGet.Status != null)
+            builder.WhereStatusEquals(pageGet.Status.Value);
+
+        if (pageGet.Priority != null)
+            builder.WherePriorityEquals(pageGet.Priority.Value);
+    }
+
     public async Task<IEnumerable<SupportTicketPreview>> GetFreeAsync(Guid accountId)
     {
         IEnumerable<SupportTicket> allFreeSupportTickets = await _supportTicketsRepository.GetAllOpenWithoutAgent();
@@ -79,11 +112,94 @@ public class SupportTicketsService
         return _mapper.Map<IEnumerable<SupportTicketPreview>>(availableSupportTickets);
     }
 
+    public async Task<SupportTicketPageView> GetFreePageAsync(
+        SupportTicketPageGetFree pageGetFree,
+        Guid accountId)
+    {
+        IEnumerable<SupportTicket> freeSupportTickets = await _supportTicketsRepository.GetByPagination(builder =>
+        {
+            SetFilterForGetFreePage(pageGetFree, builder);
+            builder.LimitAndOffset(
+                limit: pageGetFree.PageSize,
+                offset: pageGetFree.PageSize * pageGetFree.PageNumber - pageGetFree.PageSize);
+        });
+
+        var availableSupportTickets = new List<SupportTicket>();
+        foreach (SupportTicket supportTicket in freeSupportTickets)
+        {
+            IEnumerable<SupportTicketAgentRecord> agentRecords =
+                await _agentRecordsRepository.GetBySupportTicketIdAsync(supportTicket.Id);
+
+            if (agentRecords.Any(_ => _.AgentId == accountId))
+                continue;
+
+            availableSupportTickets.Add(supportTicket);
+        }
+
+        var pageView = _mapper.Map<SupportTicketPageView>(pageGetFree);
+        pageView.Status = SupportTicketStatus.Open;
+        pageView.SupportTickets = _mapper.Map<IEnumerable<SupportTicketPreview>>(availableSupportTickets);
+        int count = await _supportTicketsRepository.GetCountByPagination(builder =>
+        {
+            SetFilterForGetFreePage(pageGetFree, builder);
+        });
+        pageView.TotalPages = (int)Math.Ceiling((double)count / pageGetFree.PageSize);
+        return pageView;
+    }
+
+    private static void SetFilterForGetFreePage(
+        SupportTicketPageGetFree pageGetFree,
+        ISupportTicketsPaginationQueueBuilder builder)
+    {
+        if (pageGetFree.Priority != null)
+            builder.WherePriorityEquals(pageGetFree.Priority.Value);
+
+        builder
+            .WhereStatusEquals(SupportTicketStatus.Open)
+            .WhereAgentIdIsNull();
+    }
+
     public async Task<IEnumerable<SupportTicketPreview>> GetByAccountIdAsync(Guid accountId)
     {
         IEnumerable<SupportTicket> supportTickets = await _supportTicketsRepository.GetBasedOnAccountAsync(accountId);
 
         return _mapper.Map<IEnumerable<SupportTicketPreview>>(supportTickets);
+    }
+
+    public async Task<SupportTicketPageView> GetByAccountIdPageAsync(
+        SupportTicketPageGet pageGet,
+        Guid accountId)
+    {
+        IEnumerable<SupportTicket> supportTickets = await _supportTicketsRepository.GetByPagination(builder =>
+        {
+            SetFilterGetByAccountIdPage(pageGet, accountId, builder);
+            builder.LimitAndOffset(
+                limit: pageGet.PageSize,
+                offset: pageGet.PageSize * pageGet.PageNumber - pageGet.PageSize);
+        });
+
+        var pageView = _mapper.Map<SupportTicketPageView>(pageGet);
+        pageView.SupportTickets = _mapper.Map<IEnumerable<SupportTicketPreview>>(supportTickets);
+        int count = await _supportTicketsRepository.GetCountByPagination(builder =>
+        {
+            SetFilterGetByAccountIdPage(pageGet, accountId, builder);
+        });
+        pageView.TotalPages = (int)Math.Ceiling((double)count / pageGet.PageSize);
+        return pageView;
+    }
+
+    private static void SetFilterGetByAccountIdPage(
+        SupportTicketPageGet pageGet,
+        Guid accountId,
+        ISupportTicketsPaginationQueueBuilder builder)
+    {
+        if (pageGet.Status != null)
+            builder.WhereStatusEquals(pageGet.Status.Value);
+
+        if (pageGet.Priority != null)
+            builder.WherePriorityEquals(pageGet.Priority.Value);
+
+        builder.WhereUserIdOrAgentIdEquals(accountId);
     }
 
     public async Task<SupportTicketView> GetByIdAsync(Guid supportTicketId, Account<Guid> account)
@@ -331,7 +447,7 @@ public class SupportTicketsService
 
         IEnumerable<SupportTicketStatusRecord> statusRecords =
             await _statusRecordsRepository.GetBySupportTicketIdAsync(supportTicketId);
-                                          
+
         if (statusRecords.Last().DateTime + TimeForReopen < DateTime.Now)
             throw new BadRequestException($"SupportTicket can be reopen only if less elapsed than {TimeForReopen}");
 
