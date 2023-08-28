@@ -61,6 +61,17 @@ services:
       - postgres_db
       - rabbit_mq
   
+  resources_webapi:
+    image: resources_webapi
+    container_name: resources_webapi
+    build:
+      context: .
+      dockerfile: Resources.WebApi/Dockerfile
+    ports:
+      - "5004:80"
+    depends_on:
+      - postgres_db
+  
   notification_service:
     image: notification_service
     container_name: notification_service
@@ -68,7 +79,7 @@ services:
       context: .
       dockerfile: Notification.Service/Dockerfile
     ports:
-      - "5004:80"
+      - "5005:80"
   
   postgres_db:
     image: postgres:latest

@@ -1,6 +1,6 @@
 using SupportTickets.WebApi.Models.SupportTickets;
 
-namespace SupportTickets.WebApi.Services;
+namespace SupportTickets.WebApi.Services.SupportTicketsPaginationQueueBuilder;
 
 public interface ISupportTicketsPaginationQueueBuilder
 {

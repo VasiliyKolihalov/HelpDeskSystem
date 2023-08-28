@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportTickets.Tests", "SupportTickets.Tests\SupportTickets.Tests.csproj", "{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resources.WebApi", "Resources.WebApi\Resources.WebApi.csproj", "{40A3AFD7-680D-42E3-BE78-B2E3C90305D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,5 +61,9 @@ Global
 		{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40A3AFD7-680D-42E3-BE78-B2E3C90305D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40A3AFD7-680D-42E3-BE78-B2E3C90305D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40A3AFD7-680D-42E3-BE78-B2E3C90305D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40A3AFD7-680D-42E3-BE78-B2E3C90305D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

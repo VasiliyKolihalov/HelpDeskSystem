@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option csharp_namespace = "SupportTickets.WebApi.Services";
+
+package images;
+
+message Empty{
+
+}
+
+message GetMessageImagesRequest {
+    string message_id = 1;
+}
+message ImageResponse {
+    string id = 1;
+    string base64_content = 2;
+}
+message GetMessageImagesResponse {
+    repeated ImageResponse images = 1;
+}
+message ImageRequest {
+    string base64_content = 1;
+}
+message AddToMessageImagesRequest {
+    string message_id = 1;
+    repeated ImageRequest images = 2;
+}
+
+service Images {
+    rpc GetByMessageId (GetMessageImagesRequest) returns (GetMessageImagesResponse);
+    rpc AddToMessage (AddToMessageImagesRequest) returns (Empty);
+}

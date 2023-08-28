@@ -15,6 +15,7 @@ using SupportTickets.WebApi.Repositories.SupportTickets;
 using SupportTickets.WebApi.Repositories.SupportTicketStatusRecords;
 using SupportTickets.WebApi.Repositories.Users;
 using SupportTickets.WebApi.Services;
+using SupportTickets.WebApi.Services.Clients;
 using SupportTickets.WebApi.Services.JobsManagers.Closing;
 using SupportTickets.WebApi.Services.JobsManagers.Escalations;
 using SupportTickets.WebApi.Services.Users;
@@ -45,11 +46,20 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddHangfire(options => { options.UsePostgreSqlStorage(connectionString); });
     builder.Services.AddHangfireServer();
 
+    builder.Services.AddGrpcClient<Images.ImagesClient>(
+            name: GrpcClientsNames.Images,
+            configureClient: client =>
+            {
+                client.Address = new Uri(builder.Configuration.GetRequiredValue<string>("GrpcUrls:Resources"));
+            })
+        .AddDefaultRetryPollyHandler(builder.Configuration.GetRequiredSection("PollyOptions"));
+
     builder.Services
         .AddRabbitMqMessageConsumer(builder.Configuration.GetRequiredSection("RabbitMqOptions"))
         .AddAutoMapper(typeof(Program))
         .AddTransient<IUsersService, UsersService>()
         .AddHostedService<RabbitMqWorker>()
+        .AddTransient<IResourcesGrpcClient, ResourcesGrpcClient>()
         .AddTransient<ISupportTicketsEscalationManager, SupportTicketsEscalationManager>()
         .AddTransient<ISupportTicketsClosingManager, SupportTicketsClosingManager>()
         .AddTransient<SupportTicketsService>();

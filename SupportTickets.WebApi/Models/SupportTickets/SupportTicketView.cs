@@ -13,6 +13,6 @@ public class SupportTicketView
     public SupportTicketStatus Status { get; set; }
     public SupportTicketPriority Priority { get; set; }
 
-    public List<MessageView>? Messages { get; set; }
+    public IEnumerable<MessageView>? Messages { get; set; }
     public IEnumerable<SolutionView>? Solutions { get; set; }
 }
