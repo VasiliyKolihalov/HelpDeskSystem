@@ -15,8 +15,10 @@ using SupportTickets.WebApi.Repositories.SupportTicketAgentRecords;
 using SupportTickets.WebApi.Repositories.SupportTickets;
 using SupportTickets.WebApi.Repositories.SupportTicketStatusRecords;
 using SupportTickets.WebApi.Services;
+using SupportTickets.WebApi.Services.Clients;
 using SupportTickets.WebApi.Services.JobsManagers.Closing;
 using SupportTickets.WebApi.Services.JobsManagers.Escalations;
+using SupportTickets.WebApi.Services.SupportTicketsPaginationQueueBuilder;
 using Message = SupportTickets.WebApi.Models.Messages.Message;
 
 namespace SupportTickets.Tests;
@@ -28,6 +30,7 @@ public class Tests
     private Mock<ISolutionsRepository> _solutionsRepository = null!;
     private Mock<ISupportTicketAgentRecordsRepository> _agentRecordsRepository = null!;
     private Mock<ISupportTicketStatusRecordsRepository> _statusRecordsRepository = null!;
+    private Mock<IResourcesGrpcClient> _resourcesGrpcClient = null!;
     private Mock<ISupportTicketsEscalationManager> _escalationManager = null!;
     private Mock<ISupportTicketsClosingManager> _closingManager = null!;
     private Mock<IMapper> _mapper = null!;
@@ -41,6 +44,7 @@ public class Tests
         _solutionsRepository = new Mock<ISolutionsRepository>();
         _agentRecordsRepository = new Mock<ISupportTicketAgentRecordsRepository>();
         _statusRecordsRepository = new Mock<ISupportTicketStatusRecordsRepository>();
+        _resourcesGrpcClient = new Mock<IResourcesGrpcClient>();
         _escalationManager = new Mock<ISupportTicketsEscalationManager>();
         _closingManager = new Mock<ISupportTicketsClosingManager>();
         _mapper = new Mock<IMapper>();
@@ -51,6 +55,7 @@ public class Tests
             _solutionsRepository.Object,
             _agentRecordsRepository.Object,
             _statusRecordsRepository.Object,
+            _resourcesGrpcClient.Object,
             _escalationManager.Object,
             _closingManager.Object,
             _mapper.Object);
@@ -263,8 +268,14 @@ public class Tests
     {
         // Arrange
         supportTicket.User = new User { Id = accountId };
-        var account = new Account<Guid> { Id = accountId };
         _supportTicketsRepository.Setup(_ => _.GetByIdAsync(supportTicket.Id)).ReturnsAsync(supportTicket);
+        var message = new MessageView();
+        var supportTicketViewFromMapper = new SupportTicketView
+        {
+            Messages = new[] { message }
+        };
+        _mapper.Setup(_ => _.Map<SupportTicketView>(supportTicket)).Returns(supportTicketViewFromMapper);
+        var account = new Account<Guid> { Id = accountId };
 
         // Act
         await _supportTicketsService.GetByIdAsync(supportTicket.Id, account);
@@ -272,6 +283,8 @@ public class Tests
         // Assert
         _supportTicketsRepository.Verify(_ => _.GetByIdAsync(supportTicket.Id), Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _resourcesGrpcClient.Verify(_ => _.SendGetMessageImagesRequestAsync(message.Id), Once);
+        _resourcesGrpcClient.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<SupportTicketView>(supportTicket), Once);
         _mapper.VerifyNoOtherCalls();
     }
@@ -645,6 +658,8 @@ public class Tests
                     message.User.Id == account.Id)),
             times: Once);
         _supportTicketsRepository.VerifyNoOtherCalls();
+        _resourcesGrpcClient.Verify(_ => _.SendAddImagesToMessageRequestAsync(messageCreate.Images!, messageFromMapper.Id));
+        _resourcesGrpcClient.VerifyNoOtherCalls();
         _closingManager.Verify(_ => _.EnsureCancelCloseFor(messageCreate.SupportTicketId), Once);
         _closingManager.VerifyNoOtherCalls();
         _mapper.Verify(_ => _.Map<Message>(messageCreate), Once);

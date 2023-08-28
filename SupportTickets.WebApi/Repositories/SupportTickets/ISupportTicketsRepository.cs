@@ -1,6 +1,6 @@
 ﻿using Infrastructure.Repositories;
 using SupportTickets.WebApi.Models.SupportTickets;
-using SupportTickets.WebApi.Services;
+using SupportTickets.WebApi.Services.SupportTicketsPaginationQueueBuilder;
 
 namespace SupportTickets.WebApi.Repositories.SupportTickets;
 

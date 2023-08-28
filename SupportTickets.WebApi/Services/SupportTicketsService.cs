@@ -13,8 +13,10 @@ using SupportTickets.WebApi.Repositories.Solutions;
 using SupportTickets.WebApi.Repositories.SupportTicketAgentRecords;
 using SupportTickets.WebApi.Repositories.SupportTickets;
 using SupportTickets.WebApi.Repositories.SupportTicketStatusRecords;
+using SupportTickets.WebApi.Services.Clients;
 using SupportTickets.WebApi.Services.JobsManagers.Closing;
 using SupportTickets.WebApi.Services.JobsManagers.Escalations;
+using SupportTickets.WebApi.Services.SupportTicketsPaginationQueueBuilder;
 using static SupportTickets.WebApi.Constants.PermissionNames.SupportTicketPermissions;
 
 namespace SupportTickets.WebApi.Services;
@@ -26,6 +28,7 @@ public class SupportTicketsService
     private readonly ISolutionsRepository _solutionsRepository;
     private readonly ISupportTicketAgentRecordsRepository _agentRecordsRepository;
     private readonly ISupportTicketStatusRecordsRepository _statusRecordsRepository;
+    private readonly IResourcesGrpcClient _resourcesGrpcClient;
     private readonly ISupportTicketsEscalationManager _escalationManager;
     private readonly ISupportTicketsClosingManager _closingManager;
     private readonly IMapper _mapper;
@@ -40,6 +43,7 @@ public class SupportTicketsService
         ISolutionsRepository solutionsRepository,
         ISupportTicketAgentRecordsRepository agentRecordsRepository,
         ISupportTicketStatusRecordsRepository statusRecordsRepository,
+        IResourcesGrpcClient resourcesGrpcClient,
         ISupportTicketsEscalationManager escalationManager,
         ISupportTicketsClosingManager closingManager,
         IMapper mapper)
@@ -49,6 +53,7 @@ public class SupportTicketsService
         _solutionsRepository = solutionsRepository;
         _agentRecordsRepository = agentRecordsRepository;
         _statusRecordsRepository = statusRecordsRepository;
+        _resourcesGrpcClient = resourcesGrpcClient;
         _escalationManager = escalationManager;
         _closingManager = closingManager;
         _mapper = mapper;
@@ -209,7 +214,16 @@ public class SupportTicketsService
         if (!IsAccountRelatedToSupportTicket(supportTicket, account.Id) && !account.HasPermission(GetById))
             throw new UnauthorizedException();
 
-        return _mapper.Map<SupportTicketView>(supportTicket);
+        var supportTicketView = _mapper.Map<SupportTicketView>(supportTicket);
+        if (supportTicketView.Messages != null)
+        {
+            foreach (MessageView messageView in supportTicketView.Messages)
+            {
+                messageView.Images = await _resourcesGrpcClient.SendGetMessageImagesRequestAsync(messageView.Id);
+            }
+        }
+
+        return supportTicketView;
     }
 
     public async Task<Guid> CreateAsync(
@@ -301,6 +315,9 @@ public class SupportTicketsService
         message.Id = Guid.NewGuid();
         message.User = _mapper.Map<User>(account);
         await _messagesRepository.InsertAsync(message);
+
+        if (messageCreate.Images != null && messageCreate.Images.Any())
+            await _resourcesGrpcClient.SendAddImagesToMessageRequestAsync(messageCreate.Images, message.Id);
 
         if (supportTicket.Agent?.Id == account.Id)
         {

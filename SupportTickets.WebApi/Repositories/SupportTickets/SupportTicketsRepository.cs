@@ -6,7 +6,7 @@ using SupportTickets.WebApi.Models.Messages;
 using SupportTickets.WebApi.Models.Solutions;
 using SupportTickets.WebApi.Models.SupportTickets;
 using SupportTickets.WebApi.Models.Users;
-using SupportTickets.WebApi.Services;
+using SupportTickets.WebApi.Services.SupportTicketsPaginationQueueBuilder;
 
 namespace SupportTickets.WebApi.Repositories.SupportTickets;
 
