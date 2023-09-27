@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SupportTickets.WebApi\SupportTickets.WebApi.csproj" />
+      <ProjectReference Include="..\SupportTickets.Api\SupportTickets.Api.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,263 @@
+﻿{
+  "Routes": [
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post",
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/supporttickets",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/page{everything}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/page?{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/free",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/free",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/free/page{everything}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/free/page?{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/my",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/my",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/my/page{everything}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/my/page?{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/agents/history",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/agents/history",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/agents/appoint",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/agents/appoint",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/messages",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Put"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/messages",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/messages/{messageId}",
+      "UpstreamHttpMethod": [
+        "Delete"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/messages/{messageId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/status/history",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/solutions/{id}/status/history",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/status/solution/suggest",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/status/solution/suggest",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/status/solutions/accept",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/status/solutions/accept",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/status/solutions/reject",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/status/solutions/reject",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/status/close",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/status/close",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    },
+    {
+      "UpstreamPathTemplate": "/gateway/supporttickets/{id}/status/reopen",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "DownstreamPathTemplate": "/supporttickets/{id}/status/reopen",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "support_tickets_api",
+          "Port": 80
+        }
+      ],
+      "SwaggerKey": "SupportTickets"
+    }
+  ]
+}

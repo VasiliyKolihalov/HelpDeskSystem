@@ -29,6 +29,9 @@ public sealed class RabbitMqPublisher : IRabbitMqPublisher, IDisposable
 
     public void PublishMessage(object message, string routingKey)
     {
+        if (message == null) throw new ArgumentNullException(nameof(message));
+        if (routingKey == null) throw new ArgumentNullException(nameof(routingKey));
+
         string data = JsonConvert.SerializeObject(message);
         byte[] body = Encoding.UTF8.GetBytes(data);
         _model.BasicPublish(

@@ -30,6 +30,10 @@ public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     public void Start(Dictionary<string, Func<string, Task>> consumers)
     {
+        if (consumers == null) throw new ArgumentNullException(nameof(consumers));
+        if (consumers.Count == 0)
+            throw new ArgumentException("Value cannot be an empty collection.", nameof(consumers));
+
         Policy
             .Handle<Exception>()
             .WaitAndRetry(
@@ -57,6 +61,9 @@ public sealed class RabbitMqConsumer : IRabbitMqConsumer, IDisposable
 
     private void ConsumeQueue(string queueName, Func<string, Task> consumer)
     {
+        if (queueName == null) throw new ArgumentNullException(nameof(queueName));
+        if (consumer == null) throw new ArgumentNullException(nameof(consumer));
+
         var asyncEventingBasicConsumer = new AsyncEventingBasicConsumer(_model);
         asyncEventingBasicConsumer.Received += async (_, eventArgs) =>
         {

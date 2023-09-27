@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportTickets.WebApi", "SupportTickets.WebApi\SupportTickets.WebApi.csproj", "{5C43FE86-5D88-4373-88BA-D561FBF69F7A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportTickets.Api", "SupportTickets.Api\SupportTickets.Api.csproj", "{5C43FE86-5D88-4373-88BA-D561FBF69F7A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{3D423863-7E49-4193-B7F8-51B9817B312B}"
 EndProject
@@ -9,19 +9,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.WebApi", "Users.WebApi\Users.WebApi.csproj", "{A0A73246-B25F-44C7-B74E-62B47D3A355C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Users.Api", "Users.Api\Users.Api.csproj", "{A0A73246-B25F-44C7-B74E-62B47D3A355C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.WebApi", "Authentication.WebApi\Authentication.WebApi.csproj", "{3921292F-3DF6-4B68-866B-399915FB8ACF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.Api", "Authentication.Api\Authentication.Api.csproj", "{3921292F-3DF6-4B68-866B-399915FB8ACF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentication.Infrastructure", "Authentication.Infrastructure\Authentication.Infrastructure.csproj", "{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure.Authentication", "Infrastructure.Authentication\Infrastructure.Authentication.csproj", "{CDB5ECA8-9D66-4541-B0B5-CA19E66A4F33}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.Service", "Notification.Service\Notification.Service.csproj", "{6A366BE4-DF4F-4037-A75B-B6E292546D3E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Notification.Api", "Notification.Api\Notification.Api.csproj", "{6A366BE4-DF4F-4037-A75B-B6E292546D3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiGateway", "ApiGateway\ApiGateway.csproj", "{A9F3AF31-FF29-4210-9DD0-997679061AEB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gateway.Api", "Gateway.Api\Gateway.Api.csproj", "{A9F3AF31-FF29-4210-9DD0-997679061AEB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupportTickets.Tests", "SupportTickets.Tests\SupportTickets.Tests.csproj", "{7181D94D-3C51-4F3B-9B21-DAA1073F5EF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resources.WebApi", "Resources.WebApi\Resources.WebApi.csproj", "{40A3AFD7-680D-42E3-BE78-B2E3C90305D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resources.Api", "Resources.Api\Resources.Api.csproj", "{40A3AFD7-680D-42E3-BE78-B2E3C90305D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
