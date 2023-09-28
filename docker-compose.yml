@@ -1,58 +1,68 @@
 ﻿version: "3"
 
 services:
-  
-  api_gateway:
-    image: api_gateway
-    container_name: api_gateway
+  frontend:
+    image: frontend
+    container_name: frontend
     build:
       context: .
-      dockerfile: ApiGateway/Dockerfile
+      dockerfile: Frontend/Dockerfile
+    ports:
+      - "4999:80"
+    depends_on:
+      - gateway_api
+  
+  gateway_api:
+    image: gateway_api
+    container_name: gateway_api
+    build:
+      context: .
+      dockerfile: Gateway.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5000:80"
     depends_on:
-      - support_tickets_webapi
-      - authentication_webapi
-      - users_webapi
+      - support_tickets_api
+      - authentication_api
+      - users_api
   
-  support_tickets_webapi:
-    image: support_tickets_webapi
-    container_name: support_tickets_webapi
+  support_tickets_api:
+    image: support_tickets_api
+    container_name: support_tickets_api
     build:
       context: .
-      dockerfile: SupportTickets.WebApi/Dockerfile
+      dockerfile: SupportTickets.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5002:80"
     depends_on:
-      - authentication_webapi
-      - users_webapi
+      - authentication_api
+      - users_api
       - postgres_db
       - rabbit_mq
   
-  authentication_webapi:
-    image: authentication_webapi
-    container_name: authentication_webapi
+  authentication_api:
+    image: authentication_api
+    container_name: authentication_api
     build:
       context: .
-      dockerfile: Authentication.WebApi/Dockerfile
+      dockerfile: Authentication.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5001:80"
     depends_on:
       - postgres_db
-      - users_webapi
+      - users_api
   
-  users_webapi:
-    image: users_webapi
-    container_name: users_webapi
+  users_api:
+    image: users_api
+    container_name: users_api
     build:
       context: .
-      dockerfile: Users.WebApi/Dockerfile
+      dockerfile: Users.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
@@ -61,23 +71,23 @@ services:
       - postgres_db
       - rabbit_mq
   
-  resources_webapi:
-    image: resources_webapi
-    container_name: resources_webapi
+  resources_api:
+    image: resources_api
+    container_name: resources_api
     build:
       context: .
-      dockerfile: Resources.WebApi/Dockerfile
+      dockerfile: Resources.Api/Dockerfile
     ports:
       - "5004:80"
     depends_on:
       - postgres_db
   
-  notification_service:
-    image: notification_service
-    container_name: notification_service
+  notification_api:
+    image: notification_api
+    container_name: notification_api
     build:
       context: .
-      dockerfile: Notification.Service/Dockerfile
+      dockerfile: Notification.Api/Dockerfile
     ports:
       - "5005:80"
   

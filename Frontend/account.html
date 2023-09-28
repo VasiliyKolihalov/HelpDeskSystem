@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HelpDeskSystem</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="module" src="assets/account.js"></script>
+</head>
+<body>
+
+<div id="ChangeEmailModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Change Email</h2>
+            </div>
+            <div class="modal-body">
+                <h3 class="text-danger" id="ChangeEmailModalMessage"></h3>
+                <label for="NewEmail">New email </label>
+                <input class="form-control w-75 d-inline" type="text" id="NewEmail"/>
+            </div>
+            <div class="modal-footer">
+                <button id="ChangeEmailClick" type="button" class="btn btn-primary">Change</button>
+                <button id="HideChangeEmailModal" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ConfirmEmailModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Confirm Email</h2>
+            </div>
+            <div class="modal-body">
+                <h3 class="text-danger" id="ConfirmEmailModalMessage"></h3>
+                <label for="ConfirmCode">Code from email: </label>
+                <input class="form-control w-75 d-inline" type="text" id="ConfirmCode"/>
+            </div>
+            <div class="modal-footer">
+                <button id="ConfirmEmailClick" type="button" class="btn btn-primary">Confirm</button>
+                <button id="HideConfirmEmailModal" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ChangePasswordModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Change Password</h2>
+            </div>
+            <div class="modal-body">
+                <h3 class="text-danger" id="ChangePasswordModalMessage"></h3>
+                <div>
+                    <label for="OldPassword">OldPassword: </label>
+                    <input class="form-control w-75 d-inline" type="password" id="OldPassword"/>
+                </div>
+                <div>
+                    <label for="NewPassword">NewPassword: </label>
+                    <input class="form-control w-75 d-inline" type="password" id="NewPassword"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="ChangePasswordClick" class="btn btn-primary">Change</button>
+                <button id="HideChangePasswordModal" type="button" class="btn btn-secondary" data-dismiss="modal">Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="DeleteAccountModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Delete Account?</h2>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure want to delete account?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="DeleteAccountClick" type="button" class="btn btn-primary">Yes, delete</button>
+                <button id="HideDeleteAccountModal" type="button" class="btn btn-secondary" data-dismiss="modal">No
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand">HelpDeskSystem</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" aria-current="page" href="account.html">Account</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="users.html">Users</a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <button class="btn btn-secondary" id="LogoutClick" type="button">Logout</button>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<h2 class="m-4 text-center">Account</h2>
+
+<div class="container-lg border-start border-primary border-5 rounded w-50">
+
+    <div id="AccountDetails" class="border border-primary border-5 rounded mb-3">
+    </div>
+
+    <div class="mb-3">
+        <button class="btn btn-primary w-25" id="ShowChangeEmailModal">Change email</button>
+        <button class="btn btn-primary w-25" id="ShowConfirmEmailModal">Confirm email</button>
+        <button class="btn btn-primary w-25" id="ShowChangePasswordModal">Change password</button>
+        <button class="btn btn-danger" id="ShowDeleteAccountModal">Delete account</button>
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
+        crossorigin="anonymous"></script>
+</body>
+</html>
