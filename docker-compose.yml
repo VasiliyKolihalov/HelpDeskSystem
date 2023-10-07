@@ -41,7 +41,7 @@ services:
       - authentication_api
       - users_api
       - postgres_db
-      - rabbit_mq
+      - rabbit_mq_initializer
   
   authentication_api:
     image: authentication_api
@@ -69,7 +69,7 @@ services:
       - "5003:80"
     depends_on:
       - postgres_db
-      - rabbit_mq
+      - rabbit_mq_initializer
   
   resources_api:
     image: resources_api
@@ -91,6 +91,15 @@ services:
     ports:
       - "5005:80"
   
+  rabbit_mq_initializer:
+    image: rabbit_mq_initializer
+    container_name: rabbit_mq_initializer
+    build:
+      context: .
+      dockerfile: RabbitMqInitializer/Dockerfile
+    depends_on:
+      - rabbit_mq
+
   postgres_db:
     image: postgres:latest
     container_name: postgres_db
