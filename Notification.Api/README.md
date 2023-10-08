@@ -3,7 +3,7 @@
 Notification.Api is a microservice responsible for user notifications, primarily email notifications.
 This is not ASP.NET Core application like other microservices, this is the hosted worker service.
 
-## Communication
+## Communications
 
 This microservice consumes RabbitMQ messages from [Authentication.Api](../Authentication.Api/README.md) to notify user
 about account actions.

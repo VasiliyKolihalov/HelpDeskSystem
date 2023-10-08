@@ -2,7 +2,7 @@
 
 Resources.Api is a microservice responsible for static media data, primarily images.
 
-## Communication
+## Communications
 
 This microservice communicates with [SupportTickets.Api](../SupportTickets.Api/README.md) using gRPS calls to get and
 add images of messages. For gRPS communication uses [Grpc.Net](https://github.com/grpc/grpc-dotnet).
@@ -15,4 +15,4 @@ results, and for migrations.
 
 ## Other technologies
 
-For type mapping, microservice uses [Automapper](https://github.com/AutoMapper/AutoMapper)
+For type mapping, this microservice uses [Automapper](https://github.com/AutoMapper/AutoMapper)

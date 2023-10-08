@@ -1,5 +1,5 @@
 # Frontend
 
 This dictionary contains a simple frontend, written by using [jQuery](https://jquery.com/)
-and [boostrap](https://getbootstrap.com/).
+and [Bootstrap](https://getbootstrap.com/).
 For hosting html pages using [Nginx](https://nginx.org/ru/).

@@ -1,8 +1,8 @@
 # Users.Api
 
-Users.Api is a microservice responsible user data.
+Users.Api is a microservice responsible for user data.
 
-## Communication
+## Communications
 
 This microservice publishes RabbitMQ messages which consumes [SupportTickets.Api](../SupportTickets.Api/README.md).
 For RabbitMQ communication uses a standard client from [Infrastructure](../Infrastructure/README.md).
@@ -15,5 +15,5 @@ results, and for migrations.
 
 ## Other technologies
 
-For type mapping, microservice uses [Automapper](https://github.com/AutoMapper/AutoMapper)
-For auto describe API uses [Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore).
+For type mapping, this microservice uses [Automapper](https://github.com/AutoMapper/AutoMapper)
+For auto describe API microservice uses [Swagger](https://github.com/domaindrivendev/Swashbuckle.AspNetCore).

@@ -3,7 +3,7 @@
 Gateway.Api is a web service that implements the gateway pattern. For implementation this pattern
 using [Ocelot](https://github.com/ThreeMammals/Ocelot).
 
-## Communication
+## Communications
 
 This service communicates
 with[SupportTickets.Api](../SupportTickets.Api/README.md),[Authentication.Api](../Authentication.Api/README.md)

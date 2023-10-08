@@ -3,7 +3,7 @@
 SupportTickets.Api is a microservice responsible for support tickets, their messages and solutions. This is the main
 domain of the application.
 
-## Communication
+## Communications
 
 This microservice communicates with [Resources.Api](../Resources.Api/README.md) using gRPS calls to get and add images
 of messages. For gRPS communication uses [Grpc.Net](https://github.com/grpc/grpc-dotnet).

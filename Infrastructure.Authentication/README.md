@@ -4,6 +4,6 @@ Infrastructure.Authentication is a local library that contains abstractions and 
 roles and permissions.
 
 Several important things this solution contains:
-* Models for Account with roles and permissions
+* Models for an account with roles and permissions
 * Service for generation jwt
 * Extensions for ASP.NET Core policy authorization based on permissions

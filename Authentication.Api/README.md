@@ -1,18 +1,18 @@
-# Authentication
+# Authentication.Api
 
 Authentication.Api is a microservice responsible for accounts, roles and permissions.
 
-## Communication
+## Communications
 
 This microservice communicates with [Users.Api](../Users.Api/README.md) by using REST, for keeping the rule one
 account - one user.
 Also, microservice publishes RabbitMQ messages which consumes [Notification.Api](../Notification.Api/README.md).
-For rabbit mq communication uses a standard client from [Infrastructure](../Infrastructure/README.md).
+For RabbitMq communication uses a standard client from [Infrastructure](../Infrastructure/README.md).
 
 ## Persistence
 
-This microservice has own database `accountsdb` in postgres.
-For mapping sql query results, this microservice uses micro orm [Dapper](https://github.com/DapperLib/Dapper).
+This microservice has own database `accountsdb` in PostgreSQL.
+For mapping sql query results, microservice uses micro orm [Dapper](https://github.com/DapperLib/Dapper).
 For migration uses [FluentMigrator](https://github.com/fluentmigrator/fluentmigrator).
 
 ## Authentication

@@ -1,121 +1,48 @@
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Polly;
-using RabbitMQ.Client;
 using RabbitMqInitializer;
 
-RabbitMqOptions rabbitMqOptions = GetRabbitMqOptions();
-ILogger logger = CreateLogger();
-IModel model = CreateModal(rabbitMqOptions, logger);
 
-DeclareExchanges(model);
-DeclareQueues(model);
-BindQueues(model);
+using RabbitMqDeclarator declarator = CreateRabbitMqDeclarator();
+declarator.Connect();
 
-model.Dispose();
+DeclareExchanges(declarator);
+DeclareQueues(declarator);
+BindQueues(declarator);
+
 return;
 
-static RabbitMqOptions GetRabbitMqOptions()
+static RabbitMqDeclarator CreateRabbitMqDeclarator()
 {
     IConfigurationRoot configuration = new ConfigurationBuilder()
         .AddJsonFile("appsettings.json")
         .Build();
-
-    return configuration.GetSection("RabbitMqOptions").GetAndValidate<RabbitMqOptions>();
-}
-
-static ILogger CreateLogger()
-{
+    var rabbitMqOptions = configuration.GetSection("RabbitMqOptions").GetAndValidate<RabbitMqOptions>();
     using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
-    return loggerFactory.CreateLogger<Program>();
+    ILogger logger = loggerFactory.CreateLogger<Program>();
+
+    return new RabbitMqDeclarator(rabbitMqOptions, logger);
 }
 
-static IModel CreateModal(RabbitMqOptions rabbitMqOptions, ILogger logger)
+static void DeclareExchanges(RabbitMqDeclarator declarator)
 {
-    var connectionFactory = new ConnectionFactory
-    {
-        HostName = rabbitMqOptions.Host,
-        UserName = rabbitMqOptions.UserName,
-        Password = rabbitMqOptions.Password,
-        Port = rabbitMqOptions.Port!.Value,
-        AutomaticRecoveryEnabled = rabbitMqOptions.AutomaticRecovery!.Value
-    };
-
-    IModel model = null!;
-    Policy
-        .Handle<Exception>()
-        .WaitAndRetry(
-            retryCount: rabbitMqOptions.ConnectionRetryCount!.Value,
-            sleepDurationProvider: _ => rabbitMqOptions.ConnectionRetrySleepDuration!.Value,
-            onRetry: (exception, timeSpan) =>
-            {
-                logger.LogError(
-                    exception: exception,
-                    message: "Error connecting to RabbitMQ. Retrying in {TimeSpan} sec",
-                    args: timeSpan);
-            })
-        .Execute(() =>
-        {
-            IConnection connection = connectionFactory.CreateConnection();
-            model = connection.CreateModel();
-            connection.Dispose();
-        });
-    return model;
+    declarator.DeclareExchange("users");
+    declarator.DeclareExchange("notifications");
 }
 
-static void DeclareExchanges(IModel model)
+static void DeclareQueues(RabbitMqDeclarator declarator)
 {
-    model.ExchangeDeclare(
-        exchange: "users",
-        type: ExchangeType.Fanout,
-        durable: true);
-    model.ExchangeDeclare(
-        exchange: "notifications",
-        type: ExchangeType.Fanout,
-        durable: true);
+    declarator.DeclareQueue("users.created");
+    declarator.DeclareQueue("users.deleted");
+    declarator.DeclareQueue("users.updated");
+    declarator.DeclareQueue("notifications.requested_email_confirm_code");
 }
 
-static void DeclareQueues(IModel model)
+static void BindQueues(RabbitMqDeclarator declarator)
 {
-    model.QueueDeclare(
-        queue: "users.created",
-        durable: true,
-        exclusive: false,
-        autoDelete: false);
-    model.QueueDeclare(
-        queue: "users.deleted",
-        durable: true,
-        exclusive: false,
-        autoDelete: false);
-    model.QueueDeclare(
-        queue: "users.updated",
-        durable: true,
-        exclusive: false,
-        autoDelete: false);
-    model.QueueDeclare(
-        queue: "notifications.requested_email_confirm_code",
-        durable: true,
-        exclusive: false,
-        autoDelete: false);
-}
-
-static void BindQueues(IModel model)
-{
-    model.QueueBind(
-        queue: "users.created",
-        exchange: "users",
-        routingKey: "users.created");
-    model.QueueBind(
-        queue: "users.deleted",
-        exchange: "users",
-        routingKey: "users.deleted");
-    model.QueueBind(
-        queue: "users.updated",
-        exchange: "users",
-        routingKey: "users.updated");
-    model.QueueBind(
-        queue: "notifications.requested_email_confirm_code",
-        exchange: "notifications",
-        routingKey: "notifications.requested_email_confirm_code");
+    declarator.BindQueue(queueName: "users.created", exchangeName: "users");
+    declarator.BindQueue(queueName: "users.deleted", exchangeName: "users");
+    declarator.BindQueue(queueName: "users.updated", exchangeName: "users");
+    declarator.BindQueue(queueName: "notifications.requested_email_confirm_code", exchangeName: "notifications");
 }
