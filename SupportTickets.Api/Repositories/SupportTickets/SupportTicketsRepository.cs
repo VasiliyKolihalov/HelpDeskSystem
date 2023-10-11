@@ -286,7 +286,6 @@ public class SupportTicketsRepository : ISupportTicketsRepository
         await connection.ExecuteTransactionAsync(async transaction =>
         {
             count = await transaction.QuerySingleAsync<int>(sql: supportTicketsQuery);
-            count = await transaction.QuerySingleAsync<int>(sql: supportTicketsQuery);
         });
         return count;
     }

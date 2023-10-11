@@ -9,6 +9,7 @@ ConfigureServices(builder);
 WebApplication app = builder.Build();
 app.TriggerEntityFrameworkMigrations<ApplicationContext>();
 ConfigureMiddlewares(app);
+return;
 
 static void ConfigureServices(WebApplicationBuilder builder)
 {

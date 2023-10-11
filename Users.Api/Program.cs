@@ -12,6 +12,7 @@ WebApplication app = builder.Build();
 app.TriggerEntityFrameworkMigrations<ApplicationContext>();
 ConfigureMiddlewares(app);
 app.Run();
+return;
 
 static void ConfigureServices(WebApplicationBuilder builder)
 {
