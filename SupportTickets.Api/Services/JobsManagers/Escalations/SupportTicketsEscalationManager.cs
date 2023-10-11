@@ -10,7 +10,6 @@ public class SupportTicketsEscalationManager : ISupportTicketsEscalationManager
 {
     private readonly IBackgroundJobClient _jobClient;
     private readonly ISupportTicketsRepository _supportTicketsRepository;
-    private readonly Dictionary<Guid, string> _jobIds = new();
 
     public SupportTicketsEscalationManager(
         IBackgroundJobClient jobClient,
@@ -22,7 +21,7 @@ public class SupportTicketsEscalationManager : ISupportTicketsEscalationManager
 
     public void AssignEscalationFor(Guid supportTicketId, TimeSpan afterTime)
     {
-        _jobIds[supportTicketId] = _jobClient.Schedule(() => EscalateAsync(supportTicketId), afterTime);
+        _jobClient.Schedule(() => EscalateAsync(supportTicketId), afterTime);
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -30,10 +29,10 @@ public class SupportTicketsEscalationManager : ISupportTicketsEscalationManager
     public async Task EscalateAsync(Guid supportTicketId)
     {
         SupportTicket supportTicket = (await _supportTicketsRepository.GetByIdAsync(supportTicketId))!;
-        
-        if(supportTicket.Status == SupportTicketStatus.Close)
+
+        if (supportTicket.Status == SupportTicketStatus.Close)
             return;
-        
+
         supportTicket.Agent = default;
         supportTicket.Priority = supportTicket.Priority switch
         {

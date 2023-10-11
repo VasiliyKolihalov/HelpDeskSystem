@@ -76,9 +76,10 @@ public class RolesRepository : IRolesRepository
         await connection.ExecuteTransactionAsync(async transaction => { await transaction.ExecuteAsync(query, item); });
     }
 
-    public async Task UpdateAsync(UserRole item)
+    public Task UpdateAsync(UserRole item)
     {
         // no action required
+        return Task.CompletedTask;
     }
 
     public async Task DeleteAsync(string id)

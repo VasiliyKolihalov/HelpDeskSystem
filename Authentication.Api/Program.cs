@@ -20,6 +20,7 @@ WebApplication app = builder.Build();
 await app.UseFluentMigrationAsync(async options => await options.CreateDatabaseAsync("AccountsDb"));
 ConfigureMiddlewares(app);
 app.Run();
+return;
 
 static void ConfigureServices(WebApplicationBuilder builder)
 {

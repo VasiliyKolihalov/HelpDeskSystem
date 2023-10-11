@@ -8,6 +8,7 @@ ConfigureServices(builder);
 WebApplication app = builder.Build();
 await ConfigureMiddlewaresAsync(app);
 app.Run();
+return;
 
 static void ConfigureServices(WebApplicationBuilder builder)
 {
