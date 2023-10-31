@@ -57,11 +57,12 @@ function showSupportTicketsListAndActions() {
 
         return;
     }
-
-    if (!isUserEmailIsConfirm()) {
+    
+    if (!isUserEmailIsConfirm() === false) {
         actions.append("<p class='text-secondary'>You need to confirm your email for creation support tickets</p>")
         return;
     }
+
     let allTicketsButton = $("<button class='btn btn-primary w-25'>All my</button>")
     let myOpenTicketsButton = $("<button class='btn btn-primary w-50'>My open</button>")
     myOpenTicketsButton.attr("disabled", "disabled")

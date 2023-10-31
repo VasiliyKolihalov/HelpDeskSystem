@@ -51,7 +51,7 @@ export function isUserHasRole(role){
 }
 
 export function isUserEmailIsConfirm(){
-    return isExists(localStorage.isEmailConfirm) && localStorage.isEmailConfirm
+    return isExists(localStorage.isEmailConfirm) && localStorage.isEmailConfirm === "true"
 }
 
 export function userId(){
