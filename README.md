@@ -1,6 +1,6 @@
 ﻿# HelpDeskSystem
 
-This is a sample of help desk web service with using microservice.
+This is a sample of help desk web service with using microservices.
 This service contains backend with using ASP.NET Core and frontend with using jQuery.
 The entire service is containerized by using docker.
 The primary goal of this sample is to demonstrate microservice backend with several microservice
@@ -33,6 +33,8 @@ synchronous communication with using REST and gRPC calls.
 For CI/CD, this repository uses [GitHub Actions](https://resources.github.com/ci-cd/).
 
 ## How to run
+
+Before run, you need to replace the placeholders for the email in this [file](Notification.Api/appsettings.json).
 
 To run containers use:
 

@@ -11,6 +11,8 @@ services:
       - "4999:80"
     depends_on:
       - gateway_api
+    volumes:
+      - nginx:/var/cache/nginx
   
   gateway_api:
     image: gateway_api
@@ -126,3 +128,4 @@ services:
 volumes:
   postgresdb:
   rabbitmq:
+  nginx:
