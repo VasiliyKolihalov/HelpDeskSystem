@@ -58,7 +58,7 @@ function showSupportTicketsListAndActions() {
         return;
     }
     
-    if (!isUserEmailIsConfirm() === false) {
+    if (isUserEmailIsConfirm() === false) {
         actions.append("<p class='text-secondary'>You need to confirm your email for creation support tickets</p>")
         return;
     }
